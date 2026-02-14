@@ -58,7 +58,10 @@ Build behavior:
 - sync source priority:
   1. local sibling path (`../skill`) when available in workspace,
   2. remote raw source (`https://raw.githubusercontent.com/clawdefi-labs/clawdefi-agent-skill/main`) as fallback.
+- if source fetch fails in non-strict mode, build uses already-published `public/skills/*` artifacts.
 
 Configurable environment variables:
 - `SKILL_SOURCE_BASE_URL` (override remote skill source repo base URL),
-- `SKILL_PUBLIC_BASE_URL` (base URL written into generated `manifest.json`, default `https://skills.clawdefi.ai/clawdefi-agent`).
+- `SKILL_PUBLIC_BASE_URL` (base URL written into generated `manifest.json`, default `https://skills.clawdefi.ai/clawdefi-agent`),
+- `SKILL_DISABLE_LOCAL=1` (force remote source only, useful in CI),
+- `SKILL_SYNC_STRICT=1` (fail build if sync source cannot be fetched).
