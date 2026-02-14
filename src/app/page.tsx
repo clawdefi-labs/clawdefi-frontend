@@ -30,6 +30,9 @@ export default function Home() {
               This app is the authenticated dashboard for protocol intelligence, risk alerts, and
               permissionless DeFi action guidance.
             </p>
+            <p>
+              Skill entrypoint: <a href="/skill.md">/skill.md</a>
+            </p>
           </section>
         </section>
       </section>
