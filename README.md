@@ -36,7 +36,29 @@ pnpm dev
 
 ## Scripts
 - `pnpm dev`: run development server
+- `pnpm sync:skill`: sync `SKILL.md` + runtime scripts into frontend public hosting paths
 - `pnpm build`: build for production
 - `pnpm start`: run production server
 - `pnpm lint`: lint project
 - `pnpm typecheck`: TypeScript checks
+
+## Skill Distribution (ClawHub + Direct Domain)
+Keep one source of truth:
+- canonical skill source: `clawdefi-agent-skill` repository,
+- frontend hosts a synced static mirror for direct install and discovery.
+
+Published paths:
+- `/skill.md` (human/agent discovery path, similar to `moltbook.com/skill.md`),
+- `/skills/clawdefi-agent/SKILL.md`,
+- `/skills/clawdefi-agent/manifest.json`,
+- `/skills/clawdefi-agent/scripts/*` (all required runtime scripts).
+
+Build behavior:
+- `pnpm build` runs `pnpm sync:skill` first,
+- sync source priority:
+  1. local sibling path (`../skill`) when available in workspace,
+  2. remote raw source (`https://raw.githubusercontent.com/clawdefi-labs/clawdefi-agent-skill/main`) as fallback.
+
+Configurable environment variables:
+- `SKILL_SOURCE_BASE_URL` (override remote skill source repo base URL),
+- `SKILL_PUBLIC_BASE_URL` (base URL written into generated `manifest.json`, default `https://skills.clawdefi.ai/clawdefi-agent`).

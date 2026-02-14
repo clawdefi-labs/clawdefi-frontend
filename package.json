@@ -5,6 +5,8 @@
   "description": "ClawDeFi authenticated product UI (dashboard, protocol explorer, alerts, onboarding)",
   "scripts": {
     "dev": "next dev",
+    "sync:skill": "node scripts/sync-skill-assets.mjs",
+    "prebuild": "pnpm sync:skill",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
