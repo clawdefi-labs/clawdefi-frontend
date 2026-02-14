@@ -1,8 +1,22 @@
+import Image from "next/image";
 import BinarySignalField from "@/components/BinarySignalField";
 
 export default function Home() {
   return (
     <main className="home">
+      <header className="home-header">
+        <div className="brand-mark">
+          <Image
+            src="/brand/clawdefi-logo.png"
+            alt="ClawDeFi logo"
+            width={146}
+            height={108}
+            priority
+          />
+          <p className="brand-text">ClawDeFi</p>
+        </div>
+      </header>
+
       <section className="home-content">
         <section className="signal-hero">
           <section className="binary-surface" aria-label="Binary signal field">

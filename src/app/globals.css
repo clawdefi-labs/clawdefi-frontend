@@ -31,6 +31,33 @@ body {
   justify-content: space-between;
 }
 
+.home-header {
+  width: min(1440px, calc(100% - 56px));
+  margin: 22px auto 0;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark img {
+  display: block;
+  width: clamp(80px, 9vw, 110px);
+  height: auto;
+  filter: drop-shadow(0 8px 20px rgba(26, 228, 167, 0.24));
+}
+
+.brand-text {
+  margin: 0;
+  color: #9ff8d2;
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+  font-size: clamp(1.1rem, 2.1vw, 1.6rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .home-content {
   flex: 1;
   display: flex;
@@ -168,6 +195,10 @@ p {
 }
 
 @media (max-width: 1024px) {
+  .home-header {
+    width: calc(100% - 40px);
+  }
+
   .home-content {
     padding: 20px;
   }
@@ -187,6 +218,14 @@ p {
 }
 
 @media (max-width: 720px) {
+  .home-header {
+    margin-top: 16px;
+  }
+
+  .brand-mark {
+    gap: 8px;
+  }
+
   .binary-caption {
     left: 12px;
     bottom: 10px;
