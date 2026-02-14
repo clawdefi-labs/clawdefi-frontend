@@ -10,7 +10,7 @@ export default function Home() {
           </section>
 
           <section className="card hero-card">
-            <p className="eyebrow">AlphaClaw Frontend</p>
+            <p className="eyebrow">ClawDeFi Frontend</p>
             <h1>The source of DeFi intelligence for agents</h1>
             <p>
               This app is the authenticated dashboard for protocol intelligence, risk alerts, and
@@ -23,9 +23,9 @@ export default function Home() {
       <footer className="site-footer">
         <div className="site-footer-inner">
           <p className="site-footer-left">
-            © 2026 AlphaClaw. The DeFi Intelligence empowering the agentic future.
+            © 2026 ClawDeFi. The DeFi Intelligence empowering the agentic future.
           </p>
-          <p className="site-footer-right">Powered by AlphaClaw Protocol</p>
+          <p className="site-footer-right">Powered by ClawDeFi Protocol</p>
         </div>
       </footer>
     </main>

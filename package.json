@@ -1,8 +1,8 @@
 {
-  "name": "alphaclaw-frontend",
+  "name": "clawdefi-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "AlphaClaw authenticated product UI (dashboard, protocol explorer, alerts, onboarding)",
+  "description": "ClawDeFi authenticated product UI (dashboard, protocol explorer, alerts, onboarding)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

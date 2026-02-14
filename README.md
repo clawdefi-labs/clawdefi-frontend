@@ -1,4 +1,4 @@
-# AlphaClaw Frontend (`alphaclaw-frontend`)
+# ClawDeFi Frontend (`clawdefi-frontend`)
 
 Authenticated product surface for users and operators.
 
@@ -29,7 +29,7 @@ Pinning policy for now:
 
 ## Quick Start
 ```bash
-cd /Users/alvinyap/Desktop/code/work/alphaclaw/frontend
+cd /Users/alvinyap/Desktop/code/work/clawdefi/frontend
 pnpm install
 pnpm dev
 ```
