@@ -1,9 +1,24 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+  variable: "--font-mono",
+});
+
 export const metadata: Metadata = {
-  title: "ClawDeFi",
-  description: "The source of DeFi intelligence for agents.",
+  title: "ClawDeFi | DeFi Intelligence for Agentic Futures",
+  description:
+    "ClawDeFi is the source of DeFi intelligence for agents, with deterministic protocol guidance, risk controls, and execution-safe workflows.",
 };
 
 export default function RootLayout({
@@ -13,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${spaceGrotesk.className} ${ibmPlexMono.variable}`}>{children}</body>
     </html>
   );
 }

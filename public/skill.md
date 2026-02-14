@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.20
+version: 0.1.21
 description: The source of DeFi intelligence for agents. On first run, ask whether this machine/agent already has a configured wallet that can sign transactions locally (without sharing any private key or seed phrase). If yes, use it. If no, offer the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -133,10 +133,11 @@ Execution policy:
   - recommended command: `node scripts/simulate-transaction.js --to <target> --data <calldata> --json`
 13. When action requires ERC20 approvals, run `allowance-manager` before tx build/sign.
 14. For swap actions, run `swap` (1inch-first routing) and keep `simulate-transaction` as a hard pre-sign gate.
-15. Run `build-unwind-plan` and show fallback path before execution confirmation.
-16. Run `subscribe-alerts` (poll-mode MVP), then use `poll-alert-events` and `close-alert-subscription` as needed.
-17. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
-18. Require explicit user confirmation before transaction signing.
+15. For perp actions, run `trade-perp` with local Python Avantis SDK flow (no MCP required in MVP).
+16. Run `build-unwind-plan` and show fallback path before execution confirmation.
+17. Run `subscribe-alerts` (poll-mode MVP), then use `poll-alert-events` and `close-alert-subscription` as needed.
+18. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
+19. Require explicit user confirmation before transaction signing.
 
 ## 4) Required Disclaimer Text
 Show this exact text before any strategy or transaction guidance:
@@ -437,12 +438,52 @@ Notes:
 - Fallback: PLACEHOLDER - return `trust_unknown` and block automated execution.
 
 ### trade-perp
-- Status: placeholder only.
+- Priority: P0.
+- Status: active in MVP (Avantis-first, local Python runtime, no MCP required).
 - Module ID: `trade-perp`.
-- Description: PLACEHOLDER - add supported perp venues and position actions.
-- Inputs: PLACEHOLDER - define leverage, margin, size, and safety constraints.
-- Execution policy: PLACEHOLDER - define simulation, liquidation-buffer checks, and confirmations.
-- Unwind/fallback: PLACEHOLDER - define close/reduce-only emergency flow.
+- Purpose: execute perp actions (market open, limit open, position checks, close, and limit-cancel) with Avantis SDK.
+- Implementation path: local Python module using `avantis-trader-sdk` from `https://sdk.avantisfi.com/`.
+- Requirements:
+  - Python runtime on the local machine/agent (recommend Python 3.10+),
+  - package install: `pip install avantis-trader-sdk`,
+  - local signer key in env (`AVANTIS_PRIVATE_KEY`) and Base RPC endpoint (`AVANTIS_PROVIDER_URL`, default `https://mainnet.base.org`),
+  - keep signer secrets only in local env/secret storage and never paste them into chat,
+  - trade inputs: pair (`PAIR_SYMBOL`, e.g. `ETH/USD`), collateral amount, leverage, direction (`is_long`), optional limit price.
+- Standard local setup:
+  - `python -m venv .venv && source .venv/bin/activate && pip install avantis-trader-sdk`
+- Local operation mapping (Avantis SDK):
+  - initialize:
+    - `trader = TraderClient(provider_url=AVANTIS_PROVIDER_URL)`
+    - `trader.set_local_signer(AVANTIS_PRIVATE_KEY)`
+  - fetch market/pair context:
+    - `trader.pairs_cache.get_pairs_info()`
+    - `trader.pairs_cache.get_pair_index(PAIR_SYMBOL)`
+  - allowance readiness:
+    - `trader.get_usdc_allowance_for_trading(trader_address)`
+    - `trader.approve_usdc_for_trading(amount_usdc)` when needed
+  - open market:
+    - `trader.trade.build_trade_open_tx(..., order_type=TradeInputOrderType.MARKET, slippage_percentage=<value>)`
+    - submit with `trader.sign_and_get_receipt(tx)`
+  - open limit:
+    - `trader.trade.build_trade_open_tx(..., order_type=TradeInputOrderType.LIMIT, open_price=<price>)`
+    - submit with `trader.sign_and_get_receipt(tx)`
+  - check open trades and pending orders:
+    - `trader.trade.get_trades(trader_address)`
+  - close position:
+    - `trader.trade.build_trade_close_tx(...)` then `trader.sign_and_get_receipt(tx)`
+  - cancel pending limit:
+    - `trader.trade.build_order_cancel_tx(...)` then `trader.sign_and_get_receipt(tx)`
+- Execution policy:
+  - no MCP execution dependency for this module in MVP; run locally in Python runtime,
+  - require `wallet-readiness-check`, `token-balance-check`, and explicit risk confirmation before trade open,
+  - require chain and contract sanity checks before signing.
+- Safety rule:
+  - never print private key in logs,
+  - fail closed on allowance/funding mismatch, fee-check failure, or invalid pair metadata,
+  - do not claim fills; confirm state via `trader.trade.get_trades(...)` and receipt status.
+- Unwind/fallback:
+  - default unwind path: reduce/close via `build_trade_close_tx`,
+  - if close/cancel build fails, return `perp_unwind_blocked` and require operator intervention.
 
 ### trade-options
 - Status: placeholder only.

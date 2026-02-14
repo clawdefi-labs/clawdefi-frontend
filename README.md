@@ -1,35 +1,32 @@
 # ClawDeFi Frontend (`clawdefi-frontend`)
 
-Authenticated product surface for users and operators.
+Landing and install surface for the ClawDeFi agentic DeFi stack.
 
 ## Security Baseline (Next.js CVE)
-This repo is pinned to **`next@16.0.10`** and **`eslint-config-next@16.0.10`**, which are on the patched line for the critical middleware authorization bypass CVE disclosed by Vercel in December 2025.
+This repo is pinned to **`next@16.1.4`** and **`eslint-config-next@16.1.4`**, on a patched release line after the middleware authorization bypass disclosure from December 2025.
 
 Pinning policy for now:
 - Use exact versions (no caret ranges) for `next` and `eslint-config-next`.
 - Upgrade only to a verified patched release line.
 - Run `pnpm build` and auth-flow regression checks before every dependency bump.
 
-## Core Screens (v1)
-- Portfolio and risk dashboard
-- Protocol explorer
-- Action spec explorer (contracts, ABIs, endpoints, preconditions)
-- Strategy explorer
-- Alert subscriptions
-- Disclaimer and risk profile onboarding
-- Signer discovery gate UI (ask for existing signable wallet first; fallback recommendation for `XXXX Kit` initialization via swappable module)
-- User-custodied signer connection state
+## Frontend Sections (v1 scaffold)
+- Signal-heavy hero with interactive binary displacement canvas.
+- Install panel with ClawHub and Raw modes (copy-friendly commands).
+- Runtime flow cards for signer checks, deterministic intelligence, and safety gates.
+- Data-core cards for protocol registry, curated vaults, and strategy layers.
+- Module matrix for active and next-phase modules.
+- Policy and trust band with direct `/skill.md` entrypoint.
 
 ## Frontend Architecture
 - Next.js App Router + TypeScript
-- Component-driven feature folders
-- API client generated from backend OpenAPI spec
-- Real-time updates via WebSocket
-- Strict authz checks on premium routes
+- Static-first landing UI with interactive client components
+- Synced skill artifacts published under `/skills/clawdefi-agent/*`
+- Environment-configurable skill base URL for manifest and embedded instructions
 
 ## Quick Start
 ```bash
-cd /Users/alvinyap/Desktop/code/work/clawdefi/frontend
+cd /Users/alvinyap/Desktop/code/work/alphaclaw/frontend
 pnpm install
 pnpm dev
 ```

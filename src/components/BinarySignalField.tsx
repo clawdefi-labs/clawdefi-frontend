@@ -179,7 +179,6 @@ export default function BinarySignalField() {
   return (
     <div className="binary-field" ref={wrapperRef}>
       <canvas className="binary-canvas" ref={canvasRef} />
-      <p className="binary-caption">LIVE BINARY SIGNAL - HOVER TO DISPLACE</p>
     </div>
   );
 }
