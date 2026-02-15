@@ -135,7 +135,8 @@ export default function BinarySignalField() {
         const drawY = item.oy + wobbleY + pushY;
         const alpha = Math.min(0.96, item.alpha + hoverForce * 0.7);
 
-        context.fillStyle = `rgba(${8 + item.glow * 26}, ${172 + item.glow * 62}, ${95 + item.glow * 62}, ${alpha})`;
+        // Apple-like clean white/silver with subtle opacity
+        context.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         context.fillText(item.glyph, drawX, drawY);
       }
 
