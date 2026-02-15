@@ -60,6 +60,7 @@ Build behavior:
 Configurable environment variables:
 - `SKILL_SOURCE_BASE_URL` (override remote skill source repo base URL),
 - `SKILL_PUBLIC_BASE_URL` (base URL written into generated `manifest.json`; also rewrites legacy `skills.clawdefi.ai` links inside `SKILL.md` during sync),
-- if `SKILL_PUBLIC_BASE_URL` is unset and `VERCEL_URL` exists, sync defaults to `https://$VERCEL_URL/skills/clawdefi-agent`,
+- default public base is `https://www.clawdefi.ai/skills/clawdefi-agent`,
+- to force preview-based URLs in non-production testing, set `SKILL_USE_VERCEL_URL=1`,
 - `SKILL_DISABLE_LOCAL=1` (force remote source only, useful in CI),
 - `SKILL_SYNC_STRICT=1` (fail build if sync source cannot be fetched).

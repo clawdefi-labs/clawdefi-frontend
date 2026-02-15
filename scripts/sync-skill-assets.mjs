@@ -29,6 +29,8 @@ const WORKSPACE_ROOT = path.resolve(FRONTEND_ROOT, "..");
 const LOCAL_SKILL_ROOT = path.join(WORKSPACE_ROOT, "skill");
 const DISABLE_LOCAL_SOURCE = process.env.SKILL_DISABLE_LOCAL === "1";
 const STRICT_SYNC = process.env.SKILL_SYNC_STRICT === "1";
+const CANONICAL_PUBLIC_SKILL_BASE_URL = "https://www.clawdefi.ai/skills/clawdefi-agent";
+const USE_VERCEL_DEPLOY_BASE_URL = process.env.SKILL_USE_VERCEL_URL === "1";
 const VERCEL_DEPLOY_BASE_URL = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}/skills/${SKILL_NAME}`
   : "";
@@ -38,14 +40,16 @@ const SOURCE_BASE_URL = (
 ).replace(/\/+$/, "");
 const PUBLIC_SKILL_BASE_URL = (
   process.env.SKILL_PUBLIC_BASE_URL ||
-  VERCEL_DEPLOY_BASE_URL ||
-  "https://skills.clawdefi.ai/clawdefi-agent"
+  (USE_VERCEL_DEPLOY_BASE_URL ? VERCEL_DEPLOY_BASE_URL : "") ||
+  CANONICAL_PUBLIC_SKILL_BASE_URL
 ).replace(/\/+$/, "");
 const OUTPUT_ROOT = path.join(FRONTEND_ROOT, "public");
 const OUTPUT_SKILL_ROOT = path.join(OUTPUT_ROOT, "skills", SKILL_NAME);
 const LEGACY_SKILL_BASE_URL = "https://skills.clawdefi.ai/clawdefi-agent";
+const LEGACY_SKILL_BASE_URL_TEMPLATE = "https://skills.clawdefi.ai/${SKILL_NAME}";
 const SKILL_BASE_URL_RE = /https:\/\/[^/\s`"]+\/skills\/clawdefi-agent/g;
 const SKILL_BASE_URL_CHECK_RE = /https:\/\/[^/\s`"]+\/skills\/clawdefi-agent/;
+const PUBLIC_SKILL_BASE_ROOT = PUBLIC_SKILL_BASE_URL.replace(/\/[^/]+$/, "");
 
 function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
@@ -69,6 +73,20 @@ function rewriteSkillPublicUrls(skillText) {
     .replace(SKILL_BASE_URL_RE, PUBLIC_SKILL_BASE_URL)
     .split(LEGACY_SKILL_BASE_URL)
     .join(PUBLIC_SKILL_BASE_URL);
+}
+
+function rewriteRuntimeFilePublicUrls(relativePath, content) {
+  if (
+    relativePath === "scripts/install-raw.sh" ||
+    relativePath === "scripts/update-from-manifest.sh"
+  ) {
+    return content
+      .split(LEGACY_SKILL_BASE_URL_TEMPLATE)
+      .join(`${PUBLIC_SKILL_BASE_ROOT}/${"${SKILL_NAME}"}`)
+      .split(LEGACY_SKILL_BASE_URL)
+      .join(PUBLIC_SKILL_BASE_URL);
+  }
+  return content;
 }
 
 async function fileExists(targetPath) {
@@ -137,7 +155,7 @@ async function performSync() {
 
   for (const runtimeFile of RUNTIME_FILES) {
     const loaded = await loadSourceFile(runtimeFile);
-    fileMap.set(runtimeFile, loaded.content);
+    fileMap.set(runtimeFile, rewriteRuntimeFilePublicUrls(runtimeFile, loaded.content));
     copiedFrom.add(loaded.source);
   }
 
@@ -194,7 +212,7 @@ async function performSyncFromExistingArtifacts() {
   for (const runtimeFile of RUNTIME_FILES) {
     const runtimePath = path.join(OUTPUT_SKILL_ROOT, runtimeFile);
     const runtimeContent = await readFile(runtimePath, "utf8");
-    fileMap.set(runtimeFile, runtimeContent);
+    fileMap.set(runtimeFile, rewriteRuntimeFilePublicUrls(runtimeFile, runtimeContent));
   }
 
   const rawSkillText = fileMap.get("SKILL.md");

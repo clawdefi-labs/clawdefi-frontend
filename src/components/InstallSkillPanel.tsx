@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 type InstallMode = "clawhub" | "raw";
 
 const SKILL_NAME = "clawdefi-agent";
-const DEFAULT_SKILL_BASE = "https://skills.clawdefi.ai/clawdefi-agent";
+const DEFAULT_SKILL_BASE = "https://www.clawdefi.ai/skills/clawdefi-agent";
 const SKILL_BASE = (process.env.NEXT_PUBLIC_SKILL_BASE_URL || DEFAULT_SKILL_BASE).replace(
   /\/+$/,
   ""
