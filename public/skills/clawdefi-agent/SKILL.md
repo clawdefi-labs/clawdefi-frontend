@@ -162,7 +162,7 @@ Rules:
 
 ## 6) Update Policy
 - Check ClawDeFi skill manifest every 6 hours.
-- Apply only signed updates from trusted ClawDeFi publisher keys.
+- Apply only checksum-verified updates from trusted ClawDeFi distribution channels.
 - Maintain rollback pointer to last known-good skill version.
 
 ## 7) Distribution Channels
