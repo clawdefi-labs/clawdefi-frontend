@@ -64,7 +64,7 @@ Cons:
 - insecure local key handling can still lead to loss.
 
 Requirements:
-- Node.js runtime in the skill environment,
+- Node.js 18+ runtime in the skill environment (global `fetch` required by bundled scripts),
 - dependency: `npm install ethers`,
 - bundled scripts: `scripts/create-wallet.js`, `scripts/wallet-readiness-check.js`, `scripts/token-balance-check.js`, `scripts/allowance-manager.js`, `scripts/simulate-transaction.js`, `scripts/swap-1inch.js`, `scripts/query-protocol.js`, `scripts/query-coingecko.js`, and `scripts/query-contract-verification.js`,
 - local secure env or secret-storage path for signer variables,
@@ -85,10 +85,10 @@ Setup:
 Readiness checks:
 - run bundled readiness module:
   - `node scripts/wallet-readiness-check.js --json`
-- recover signer from SIWE signature and match expected address,
+- perform local signature roundtrip (sign + recover) and match expected address,
 - selected-chain RPC balance query succeeds,
 - nonce query succeeds on selected chain,
-- controlled transaction simulation succeeds before live execution.
+- simulation check is a separate mandatory step via `simulate-transaction` before sign flow.
 
 Security guard:
 - never print private key or seed in logs (the `--env` mode prints it to stdout intentionally; treat stdout as secret and do not run in CI or log-captured environments),
@@ -163,7 +163,9 @@ Rules:
 
 ## 6) Update Policy
 - Check ClawDeFi skill manifest every 6 hours.
-- Apply only checksum-verified updates from trusted ClawDeFi distribution channels.
+- Prefer checksum-verified update paths from trusted ClawDeFi distribution channels.
+- `update-from-manifest.sh` is the canonical checksum-verified path for installed skill updates.
+- Manual raw fetch one-liners are fallback-only and may skip per-file checksum guarantees.
 - Maintain rollback pointer to last known-good skill version.
 
 ## 7) Distribution Channels
@@ -185,6 +187,10 @@ Support both installation channels:
 Notes:
 - Raw channel is for environments where ClawHub is not available.
 - Raw updates keep rollback backups before overwrite and sync required runtime script files.
+- Tool prerequisites:
+  - `curl` and `bash` required for raw install/update scripts,
+  - `jq` required for strict manifest parsing in `update-from-manifest.sh` (and recommended for install path metadata/checksum parsing),
+  - `sha256sum` or `shasum` required for local checksum verification.
 - `references/` is local-only and is intentionally not installed by raw installer scripts.
 
 ## 8) Placeholder Action Modules
@@ -227,7 +233,7 @@ Notes:
 - Module ID: `build-unwind-plan`.
 - Purpose: return deterministic unwind steps plus emergency fallback path.
 - MCP mapping: `POST /tools/build_unwind_plan`.
-- Required input: `protocolSlug`, `chainSlug`, `actionKey` (optional: `positionId`).
+- Required input: `protocolSlug`, `chainSlug`, `actionKey`, `wallet` (optional: `positionId`).
 - Output contract:
   - returns `position_aware` plan when a matching snapshot exists,
   - returns `curated_fallback` when snapshot is missing/stale-hard,
@@ -354,7 +360,7 @@ Notes:
   - use endpoint family `/swap/v6.1/{chainId}/quote` and `/swap/v6.1/{chainId}/swap`,
   - use API key auth (`Authorization: Bearer <ONEINCH_API_KEY>`),
   - keep `ONEINCH_API_KEY` only in local environment/secret storage (never pasted into chat),
-  - default base URL is `https://api.1inch.com` (not `api.1inch.dev`, which was deprecated after January 31, 2026).
+  - default base URL is `https://api.1inch.com`; legacy `api.1inch.dev` should be treated as deprecated/unreliable.
 - Required inputs:
   - quote/build/execute mode,
   - `CHAIN_ID`, `FROM_TOKEN`, `TO_TOKEN`, `AMOUNT_WEI`,
