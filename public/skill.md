@@ -133,7 +133,7 @@ Execution policy:
   - recommended command: `node scripts/simulate-transaction.js --to <target> --data <calldata> --json`
 13. When action requires ERC20 approvals, run `allowance-manager` before tx build/sign.
 14. For swap actions, run `swap` (1inch-first routing) and keep `simulate-transaction` as a hard pre-sign gate.
-15. For perp actions, run `trade-perp` with local Python Avantis SDK flow (no MCP required in MVP).
+15. For perp actions, run `trade-perp` with local Python Avantis SDK flow (no MCP required in MVP), and handle TP/SL explicitly (execute+verify or return `tp_sl_not_configured`).
 16. Run `build-unwind-plan` and show fallback path before execution confirmation.
 17. Run `subscribe-alerts` (poll-mode MVP), then use `poll-alert-events` and `close-alert-subscription` as needed.
 18. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
@@ -158,6 +158,7 @@ Rules:
 - Never ask for private keys or seed phrases.
 - Never ask users to paste API secrets or wallet credentials into chat.
 - Never transmit signer secrets to `clawdefi-core`.
+- Never install dependencies silently; announce install intent and wait for user confirmation first.
 - Always provide unwind path for leveraged or time-sensitive positions.
 
 ## 6) Update Policy
@@ -442,6 +443,7 @@ Notes:
 - Status: active in MVP (Avantis-first, local Python runtime, no MCP required).
 - Module ID: `trade-perp`.
 - Purpose: execute perp actions (market open, limit open, position checks, close, and limit-cancel) with Avantis SDK.
+- Scope boundary (MVP): TP/SL is not treated as guaranteed unless the runtime explicitly supports and confirms TP/SL order placement with receipts/order IDs.
 - Implementation path: local Python module using `avantis-trader-sdk` from `https://sdk.avantisfi.com/`.
 - Requirements:
   - Python runtime on the local machine/agent (recommend Python 3.10+),
@@ -449,6 +451,15 @@ Notes:
   - local signer key in env (`AVANTIS_PRIVATE_KEY`) and Base RPC endpoint (`AVANTIS_PROVIDER_URL`, default `https://mainnet.base.org`),
   - keep signer secrets only in local env/secret storage and never paste them into chat,
   - trade inputs: pair (`PAIR_SYMBOL`, e.g. `ETH/USD`), collateral amount, leverage, direction (`is_long`), optional limit price.
+- Pre-install communication policy (must enforce):
+  - before any first-time Python/SDK setup, explicitly state:
+    - what will be installed (`python venv`, `avantis-trader-sdk`),
+    - why installation is required,
+    - expected duration (can take several minutes),
+    - that terminal may appear idle while dependencies compile/download.
+  - require explicit user confirmation before running installation commands.
+  - during install, emit progress updates at least every 30-60 seconds.
+  - if install exceeds expected time, report that it is still running and ask whether to continue waiting.
 - Standard local setup:
   - `python -m venv .venv && source .venv/bin/activate && pip install avantis-trader-sdk`
 - Local operation mapping (Avantis SDK):
@@ -473,14 +484,23 @@ Notes:
     - `trader.trade.build_trade_close_tx(...)` then `trader.sign_and_get_receipt(tx)`
   - cancel pending limit:
     - `trader.trade.build_order_cancel_tx(...)` then `trader.sign_and_get_receipt(tx)`
+- TP/SL policy (must enforce):
+  - when user requests `take-profit` and/or `stop-loss`, the agent must either:
+    - place TP/SL using a supported Avantis SDK path and return verifiable artifacts (`txHash` and/or `orderId`), or
+    - explicitly state TP/SL placement is not executed in this run and require manual placement confirmation.
+  - never silently ignore TP/SL requests.
+  - never claim TP/SL is active without explicit verification via SDK position/order query after placement.
+  - if TP/SL cannot be placed, return `tp_sl_not_configured` and downgrade recommendation to `no_trade` unless user explicitly accepts proceeding without TP/SL.
 - Execution policy:
   - no MCP execution dependency for this module in MVP; run locally in Python runtime,
   - require `wallet-readiness-check`, `token-balance-check`, and explicit risk confirmation before trade open,
-  - require chain and contract sanity checks before signing.
+  - require chain and contract sanity checks before signing,
+  - for market/limit opens, validate and echo TP/SL intent (`enabled`/`disabled`) before final sign prompt.
 - Safety rule:
   - never print private key in logs,
   - fail closed on allowance/funding mismatch, fee-check failure, or invalid pair metadata,
-  - do not claim fills; confirm state via `trader.trade.get_trades(...)` and receipt status.
+  - do not claim fills; confirm state via `trader.trade.get_trades(...)` and receipt status,
+  - do not claim risk controls are active (TP/SL) unless verified post-placement.
 - Unwind/fallback:
   - default unwind path: reduce/close via `build_trade_close_tx`,
   - if close/cancel build fails, return `perp_unwind_blocked` and require operator intervention.
