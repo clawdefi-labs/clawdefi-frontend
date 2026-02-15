@@ -64,13 +64,15 @@ const nextModules = [
 export default function Home() {
   return (
     <main className="site-shell">
+      <div className="site-aura" aria-hidden="true" />
+
       <header className="top-nav">
         <Link href="/" className="brand-mark">
           <Image
             src="/brand/clawdefi-logo.png"
             alt="ClawDeFi logo"
-            width={44}
-            height={32}
+            width={146}
+            height={108}
             priority
           />
           <span>ClawDeFi</span>
@@ -86,8 +88,8 @@ export default function Home() {
 
       <section className="hero-grid reveal">
         <div className="hero-copy">
-          <p className="kicker">The DeFi Intelligence layer for the agentic future</p>
-          <h1>Install a DeFi brain on your agent.</h1>
+          <p className="kicker">DeFi Intelligence for Agentic Systems</p>
+          <h1>Professional execution rails for local and OpenClaw agents.</h1>
           <p className="hero-lead">
             ClawDeFi combines protocol intelligence, deterministic risk checks, and operator-safe
             workflows so agents can execute swap, perps, options, and yield actions with intent.
