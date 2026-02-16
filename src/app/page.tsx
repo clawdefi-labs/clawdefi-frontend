@@ -82,7 +82,9 @@ export default function Home() {
         </Link>
 
         <nav className="nav-menu">
+          <a href="#runtime" className="nav-link">What can you do</a>
           <a href="#install" className="nav-link">Install</a>
+          <a href="#modules" className="nav-link">Roadmap</a>
           <a href="#runtime" className="nav-link">Runtime</a>
           <a href="#modules" className="nav-link">Modules</a>
           <a href="/skill.md" className="nav-pill">skill.md</a>
