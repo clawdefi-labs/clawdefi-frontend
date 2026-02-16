@@ -43,6 +43,7 @@ const activeModules = [
   "query-action-spec",
   "query-integration-endpoint",
   "query-contract-verification",
+  "query-pyth",
   "query-coingecko",
   "wallet-readiness-check",
   "token-balance-check",
@@ -106,7 +107,7 @@ export default function Home() {
 
           <div className="hero-metrics">
             <article>
-              <p className="metric-value">19-step</p>
+              <p className="metric-value">20-step</p>
               <p className="metric-label">runtime gate before signing</p>
             </article>
             <article>

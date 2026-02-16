@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.21
+version: 0.1.22
 description: The source of DeFi intelligence for agents. On first run, ask whether this machine/agent already has a configured wallet that can sign transactions locally (without sharing any private key or seed phrase). If yes, use it. If no, offer the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -66,7 +66,7 @@ Cons:
 Requirements:
 - Node.js 18+ runtime in the skill environment (global `fetch` required by bundled scripts),
 - dependency: `npm install ethers`,
-- bundled scripts: `scripts/create-wallet.js`, `scripts/wallet-readiness-check.js`, `scripts/token-balance-check.js`, `scripts/allowance-manager.js`, `scripts/simulate-transaction.js`, `scripts/swap-1inch.js`, `scripts/query-protocol.js`, `scripts/query-coingecko.js`, and `scripts/query-contract-verification.js`,
+- bundled scripts: `scripts/create-wallet.js`, `scripts/wallet-readiness-check.js`, `scripts/token-balance-check.js`, `scripts/allowance-manager.js`, `scripts/simulate-transaction.js`, `scripts/swap-1inch.js`, `scripts/query-protocol.js`, `scripts/query-coingecko.js`, `scripts/query-pyth.js`, and `scripts/query-contract-verification.js`,
 - local secure env or secret-storage path for signer variables,
 - selected-chain RPC endpoint for balance/readiness checks.
 
@@ -123,21 +123,22 @@ Execution policy:
   - recommended command: `node scripts/token-balance-check.js --chain-id <id> --wallet-address <wallet> --token-address NATIVE --json`
 4. Run `query-chain-registry` for canonical chain/RPC/explorer context.
 5. Run `query-protocol` for protocol overview and supported chain/action context from `clawdefi-core`.
-6. Run `query-coingecko` for market context (price, 24h movement, market-cap/volume) as advisory data.
-7. Collect/confirm user risk profile: `beginner`, `advanced`, or `expert`.
-8. Require explicit disclaimer acceptance.
-9. Run `query-action-spec` to fetch canonical action contract from `clawdefi-core`.
-10. Run `query-contract-verification` for each execution-critical contract address before execution planning.
-11. Run `query-integration-endpoint` to fetch official endpoint/method/auth/rate-limit guidance.
-12. Run `simulate-transaction` before any sign request.
+6. Run `query-pyth` for execution-grade oracle context (Hermes API/SSE, and Pyth Pro WSS endpoint guidance) when monitoring perps or oracle-sensitive actions.
+7. Run `query-coingecko` for market context (price, 24h movement, market-cap/volume) as advisory data only.
+8. Collect/confirm user risk profile: `beginner`, `advanced`, or `expert`.
+9. Require explicit disclaimer acceptance.
+10. Run `query-action-spec` to fetch canonical action contract from `clawdefi-core`.
+11. Run `query-contract-verification` for each execution-critical contract address before execution planning.
+12. Run `query-integration-endpoint` to fetch official endpoint/method/auth/rate-limit guidance.
+13. Run `simulate-transaction` before any sign request.
   - recommended command: `node scripts/simulate-transaction.js --to <target> --data <calldata> --json`
-13. When action requires ERC20 approvals, run `allowance-manager` before tx build/sign.
-14. For swap actions, run `swap` (1inch-first routing) and keep `simulate-transaction` as a hard pre-sign gate.
-15. For perp actions, run `trade-perp` with local Python Avantis SDK flow (no MCP required in MVP), and handle TP/SL explicitly (execute+verify or return `tp_sl_not_configured`).
-16. Run `build-unwind-plan` and show fallback path before execution confirmation.
-17. Run `subscribe-alerts` (poll-mode MVP), then use `poll-alert-events` and `close-alert-subscription` as needed.
-18. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
-19. Require explicit user confirmation before transaction signing.
+14. When action requires ERC20 approvals, run `allowance-manager` before tx build/sign.
+15. For swap actions, run `swap` (1inch-first routing) and keep `simulate-transaction` as a hard pre-sign gate.
+16. For perp actions, run `trade-perp` with local Python Avantis SDK flow (no MCP required in MVP), and handle TP/SL explicitly (execute+verify or return `tp_sl_not_configured`).
+17. Run `build-unwind-plan` and show fallback path before execution confirmation.
+18. Run `subscribe-alerts` (poll-mode MVP), then use `poll-alert-events` and `close-alert-subscription` as needed.
+19. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
+20. Require explicit user confirmation before transaction signing.
 
 ## 4) Required Disclaimer Text
 Show this exact text before any strategy or transaction guidance:
@@ -180,7 +181,7 @@ Support both installation channels:
 - Install directly from hosted raw artifacts (`SKILL.md` + required runtime script):
   - `bash scripts/install-raw.sh`
   - or manual one-liner:
-    - `mkdir -p ~/.openclaw/skills/clawdefi-agent/scripts && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md -o ~/.openclaw/skills/clawdefi-agent/SKILL.md && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/create-wallet.js -o ~/.openclaw/skills/clawdefi-agent/scripts/create-wallet.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-readiness-check.js -o ~/.openclaw/skills/clawdefi-agent/scripts/wallet-readiness-check.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/token-balance-check.js -o ~/.openclaw/skills/clawdefi-agent/scripts/token-balance-check.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/allowance-manager.js -o ~/.openclaw/skills/clawdefi-agent/scripts/allowance-manager.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/simulate-transaction.js -o ~/.openclaw/skills/clawdefi-agent/scripts/simulate-transaction.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/swap-1inch.js -o ~/.openclaw/skills/clawdefi-agent/scripts/swap-1inch.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-protocol.js -o ~/.openclaw/skills/clawdefi-agent/scripts/query-protocol.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-coingecko.js -o ~/.openclaw/skills/clawdefi-agent/scripts/query-coingecko.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-contract-verification.js -o ~/.openclaw/skills/clawdefi-agent/scripts/query-contract-verification.js && chmod +x ~/.openclaw/skills/clawdefi-agent/scripts/create-wallet.js ~/.openclaw/skills/clawdefi-agent/scripts/wallet-readiness-check.js ~/.openclaw/skills/clawdefi-agent/scripts/token-balance-check.js ~/.openclaw/skills/clawdefi-agent/scripts/allowance-manager.js ~/.openclaw/skills/clawdefi-agent/scripts/simulate-transaction.js ~/.openclaw/skills/clawdefi-agent/scripts/swap-1inch.js ~/.openclaw/skills/clawdefi-agent/scripts/query-protocol.js ~/.openclaw/skills/clawdefi-agent/scripts/query-coingecko.js ~/.openclaw/skills/clawdefi-agent/scripts/query-contract-verification.js`
+    - `mkdir -p ~/.openclaw/skills/clawdefi-agent/scripts && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md -o ~/.openclaw/skills/clawdefi-agent/SKILL.md && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/create-wallet.js -o ~/.openclaw/skills/clawdefi-agent/scripts/create-wallet.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-readiness-check.js -o ~/.openclaw/skills/clawdefi-agent/scripts/wallet-readiness-check.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/token-balance-check.js -o ~/.openclaw/skills/clawdefi-agent/scripts/token-balance-check.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/allowance-manager.js -o ~/.openclaw/skills/clawdefi-agent/scripts/allowance-manager.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/simulate-transaction.js -o ~/.openclaw/skills/clawdefi-agent/scripts/simulate-transaction.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/swap-1inch.js -o ~/.openclaw/skills/clawdefi-agent/scripts/swap-1inch.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-protocol.js -o ~/.openclaw/skills/clawdefi-agent/scripts/query-protocol.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-coingecko.js -o ~/.openclaw/skills/clawdefi-agent/scripts/query-coingecko.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-pyth.js -o ~/.openclaw/skills/clawdefi-agent/scripts/query-pyth.js && curl -fsSL https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-contract-verification.js -o ~/.openclaw/skills/clawdefi-agent/scripts/query-contract-verification.js && chmod +x ~/.openclaw/skills/clawdefi-agent/scripts/create-wallet.js ~/.openclaw/skills/clawdefi-agent/scripts/wallet-readiness-check.js ~/.openclaw/skills/clawdefi-agent/scripts/token-balance-check.js ~/.openclaw/skills/clawdefi-agent/scripts/allowance-manager.js ~/.openclaw/skills/clawdefi-agent/scripts/simulate-transaction.js ~/.openclaw/skills/clawdefi-agent/scripts/swap-1inch.js ~/.openclaw/skills/clawdefi-agent/scripts/query-protocol.js ~/.openclaw/skills/clawdefi-agent/scripts/query-coingecko.js ~/.openclaw/skills/clawdefi-agent/scripts/query-pyth.js ~/.openclaw/skills/clawdefi-agent/scripts/query-contract-verification.js`
 - Poll manifest and update with hash verification:
   - `bash scripts/update-from-manifest.sh`
 
@@ -457,6 +458,11 @@ Notes:
   - local signer key in env (`AVANTIS_PRIVATE_KEY`) and Base RPC endpoint (`AVANTIS_PROVIDER_URL`, default `https://mainnet.base.org`),
   - keep signer secrets only in local env/secret storage and never paste them into chat,
   - trade inputs: pair (`PAIR_SYMBOL`, e.g. `ETH/USD`), collateral amount, leverage, direction (`is_long`), optional limit price.
+- Oracle and monitoring policy:
+  - treat Avantis pricing and PnL as oracle-authoritative (Avantis pricing is Pyth-based),
+  - for live monitoring, read position/PnL from Avantis SDK position payloads (for example `trader.trade.get_trades(...)` and returned position fields),
+  - do not compute authoritative perp PnL from CoinGecko spot prices,
+  - when external oracle validation is needed, use `query-pyth` rather than `query-coingecko`.
 - Pre-install communication policy (must enforce):
   - before any first-time Python/SDK setup, explicitly state:
     - what will be installed (`python venv`, `avantis-trader-sdk`),
@@ -501,7 +507,8 @@ Notes:
   - no MCP execution dependency for this module in MVP; run locally in Python runtime,
   - require `wallet-readiness-check`, `token-balance-check`, and explicit risk confirmation before trade open,
   - require chain and contract sanity checks before signing,
-  - for market/limit opens, validate and echo TP/SL intent (`enabled`/`disabled`) before final sign prompt.
+  - for market/limit opens, validate and echo TP/SL intent (`enabled`/`disabled`) before final sign prompt,
+  - for open-position monitoring, report Avantis-native/Pyth-backed values as primary and label CoinGecko as advisory only.
 - Safety rule:
   - never print private key in logs,
   - fail closed on allowance/funding mismatch, fee-check failure, or invalid pair metadata,
@@ -581,9 +588,41 @@ Notes:
   - read-only HTTP data retrieval,
   - treat API failures/rate-limit responses as advisory failure, not execution authorization.
 - Safety rule:
-  - never use CoinGecko as sole execution authority; reconcile all execution-critical fields with `clawdefi-core`.
+  - never use CoinGecko as sole execution authority; reconcile all execution-critical fields with `clawdefi-core`,
+  - never use CoinGecko as authoritative source for perp liquidation/PnL monitoring.
 - Fallback:
   - if unavailable, return explicit error/staleness warning and continue only with core-backed deterministic data.
+
+### query-pyth
+- Priority: P0.
+- Status: active in MVP (local bundled module).
+- Module ID: `query-pyth`.
+- Purpose: query Pyth oracle data via Hermes endpoints and expose Pyth Pro WebSocket endpoint guidance for low-latency monitoring paths.
+- Implementation path: `scripts/query-pyth.js`.
+- Supported modes:
+  - `latest` -> Hermes REST `GET /v2/updates/price/latest?ids[]=...`,
+  - `stream` -> Hermes SSE `GET /v2/updates/price/stream?ids[]=...`,
+  - `pro-wss` -> returns official Pyth Pro WebSocket endpoint set and auth requirements.
+- Required inputs:
+  - for `latest`/`stream`: `feedIds` (comma-separated Pyth feed IDs),
+  - for `pro-wss`: no feed IDs required (optional token presence signal only).
+- Standard run commands:
+  - latest:
+    - `node scripts/query-pyth.js latest --feed-ids <feed_id_1,feed_id_2> --json`
+  - stream (capture N events then return):
+    - `node scripts/query-pyth.js stream --feed-ids <feed_id_1,feed_id_2> --max-events 3 --json`
+  - pro-wss endpoint guidance:
+    - `node scripts/query-pyth.js pro-wss --json`
+- Output contract:
+  - mode-specific payload with request metadata and parsed response body/events,
+  - in `pro-wss` mode includes endpoint list and auth header contract (`Authorization: Bearer <PYTH_PRO_ACCESS_TOKEN>`).
+- Execution policy:
+  - read-only market/oracle query path,
+  - treat oracle query failure as a blocking signal for real-time perp monitoring confidence.
+- Safety rule:
+  - for Avantis/perp monitoring, treat Pyth/Avantis-native values as authoritative over CoinGecko.
+- Fallback:
+  - if Pyth is unavailable, explicitly mark monitoring as degraded and avoid precision PnL claims.
 
 ### query-contract-verification
 - Priority: P0.
