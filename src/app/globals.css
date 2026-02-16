@@ -322,14 +322,18 @@ a {
   margin: 0;
   color: var(--mint-soft);
   font-family: var(--font-mono), "SFMono-Regular", Menlo, monospace;
-  font-size: 0.82rem;
+  font-size: 1.6rem; /* Increased from 0.82rem */
+  font-weight: 600;
+  text-shadow: 0 0 12px rgba(89, 242, 178, 0.4);
 }
 
 .metric-label {
   margin: 8px 0 0;
-  color: var(--text-2);
+  color: var(--text-1);
   font-size: 0.82rem;
   line-height: 1.45;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .metric-subtle {
@@ -791,11 +795,16 @@ a {
 }
 
 .stat-card {
-  background: rgba(2, 4, 8, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 16px;
-  border-radius: 12px;
-  backdrop-filter: blur(4px);
+  background: rgba(2, 4, 8, 0.75); /* Increased opacity from 0.4 */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 24px 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.3s ease;
+}
+
+.stat-card:hover {
+  border-color: rgba(89, 242, 178, 0.4);
 }
 
 .content-stack {
