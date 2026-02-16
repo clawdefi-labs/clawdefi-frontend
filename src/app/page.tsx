@@ -74,12 +74,11 @@ export default function Home() {
           <Image
             src="/brand/clawdefi-logo.png"
             alt="ClawDeFi logo"
-            width={120}
-            height={88}
+            width={180}
+            height={52}
             priority
-            className="brand-logo"
+            style={{ width: 'auto', height: '32px' }}
           />
-          <span className="brand-text">ClawDeFi</span>
         </Link>
 
         <nav className="nav-menu">
