@@ -770,8 +770,8 @@ a {
   font-size: clamp(1rem, 2vw, 1.25rem);
   line-height: 1.6;
   color: #b4c6d7;
-  max-width: 680px;
-  margin: 0 auto 32px;
+  max-width: 860px; /* Increased from 680px */
+  margin: 0 auto 40px;
 }
 
 .hero-actions {
