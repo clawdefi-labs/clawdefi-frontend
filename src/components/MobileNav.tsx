@@ -24,13 +24,14 @@ export default function MobileNav() {
   return (
     <div className="mobile-nav-container">
       <button 
+        type="button"
         className={`menu-toggle ${isOpen ? "is-active" : ""}`} 
         onClick={toggleMenu}
         aria-label="Toggle menu"
       >
-        <span className="hamburger-box">
-          <span className="hamburger-inner"></span>
-        </span>
+        <span></span>
+        <span></span>
+        <span></span>
       </button>
 
       <div className={`mobile-menu-overlay ${isOpen ? "is-open" : ""}`}>
