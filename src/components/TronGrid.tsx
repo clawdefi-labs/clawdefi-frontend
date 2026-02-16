@@ -41,8 +41,8 @@ export default function TronGrid() {
     const project = (x: number, y: number, z: number) => {
       const scale = fov / (viewDist + z);
       const x2d = (x * scale) + width / 2;
-      // Horizon slightly above center
-      const horizonY = height * 0.4;
+      // Horizon slightly lower to give text more space
+      const horizonY = height * 0.45;
       const y2d = (y * scale) + horizonY; 
       return { x: x2d, y: y2d, scale };
     };
