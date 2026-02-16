@@ -3,6 +3,7 @@ import Link from "next/link";
 import InstallSkillPanel from "@/components/InstallSkillPanel";
 import HeroMetrics from "@/components/HeroMetrics";
 import TronGrid from "@/components/TronGrid";
+import MobileNav from "@/components/MobileNav";
 
 const runtimeTrack = [
   {
@@ -89,6 +90,8 @@ export default function Home() {
           <a href="#modules" className="nav-link">Modules</a>
           <a href="/skill.md" className="nav-pill">skill.md</a>
         </nav>
+
+        <MobileNav />
       </header>
 
       <section className="hero-edge">
