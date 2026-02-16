@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import BinarySignalField from "@/components/BinarySignalField";
 import InstallSkillPanel from "@/components/InstallSkillPanel";
+import SiteVisitsCard from "@/components/SiteVisitsCard";
 
 const runtimeTrack = [
   {
@@ -118,6 +119,7 @@ export default function Home() {
               <p className="metric-value">User-custodied</p>
               <p className="metric-label">local signer and secret storage</p>
             </article>
+            <SiteVisitsCard />
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import VisitBeacon from "@/components/VisitBeacon";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${spaceGrotesk.className} ${ibmPlexMono.variable}`}>
         {children}
+        <VisitBeacon />
         <Analytics />
       </body>
     </html>

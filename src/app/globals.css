@@ -196,7 +196,7 @@ a {
 .hero-metrics {
   margin-top: 22px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -219,6 +219,13 @@ a {
   color: var(--text-2);
   font-size: 0.82rem;
   line-height: 1.45;
+}
+
+.metric-subtle {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .signal-stage {
@@ -496,6 +503,10 @@ a {
   .binary-field,
   .signal-stage {
     min-height: 340px;
+  }
+
+  .hero-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .card-grid {

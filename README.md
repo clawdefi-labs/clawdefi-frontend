@@ -64,3 +64,16 @@ Configurable environment variables:
 - to force preview-based URLs in non-production testing, set `SKILL_USE_VERCEL_URL=1`,
 - `SKILL_DISABLE_LOCAL=1` (force remote source only, useful in CI),
 - `SKILL_SYNC_STRICT=1` (fail build if sync source cannot be fetched).
+
+## Frontend Visit Counter
+The landing page shows live visit stats from your backend analytics store (not from local deploy memory).
+
+Required runtime env vars in Vercel:
+- `CORE_API_BASE_URL` (example: `https://api.clawdefi.ai`)
+- `INTERNAL_SERVICE_TOKEN` (must match core service token; server-only variable, never expose as `NEXT_PUBLIC_*`)
+
+Behavior:
+- Browser sends a lightweight pageview beacon to `/api/analytics/visit`.
+- Frontend server route forwards this to core internal analytics ingestion.
+- Frontend reads aggregated totals from `/api/analytics/visits`.
+- Counts persist across frontend deployments as long as the same backend/database is retained.
