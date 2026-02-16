@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.22
+version: 0.1.23
 description: The source of DeFi intelligence for agents. On first run, ask whether this machine/agent already has a configured wallet that can sign transactions locally (without sharing any private key or seed phrase). If yes, use it. If no, offer the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -83,8 +83,15 @@ Setup:
 - Build SIWE message (domain/URI, address, chain ID, nonce, issued-at timestamp) and sign with local key.
 
 Readiness checks:
-- run bundled readiness module:
-  - `node scripts/wallet-readiness-check.js --json`
+- preflight required local signer inputs before readiness call:
+  - `export RPC_URL='https://mainnet.base.org'`
+  - `export CHAIN_ID='8453'`
+  - `export PRIVATE_KEY='0x...'`
+  - optional: `export WALLET_ADDRESS='0x...'`
+- hard rule: do not run bare `node scripts/wallet-readiness-check.js --json` when required inputs are unset.
+- run bundled readiness module with either:
+  - env-backed call: `node scripts/wallet-readiness-check.js --json`
+  - explicit flags: `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --wallet-address <0x...> --json`
 - perform local signature roundtrip (sign + recover) and match expected address,
 - selected-chain RPC balance query succeeds,
 - nonce query succeeds on selected chain,
@@ -118,7 +125,13 @@ Execution policy:
 - if yes, link existing signer.
 - if no, present wallet options in exact order, include pros/cons/requirements/credential-source notes, explicitly state that more wallet options will be available in future ClawDeFi releases, then run selected setup (`local-siwe-wallet`).
 2. Run `wallet-readiness-check` (chain, balance, nonce, RPC health, signature roundtrip).
-  - recommended command: `node scripts/wallet-readiness-check.js --json`
+  - preflight required keys/chain context:
+    - ensure local runtime has `RPC_URL`, `CHAIN_ID`, and `PRIVATE_KEY` (or equivalent CLI flags),
+    - if missing, ask user for chain/RPC and request local env setup confirmation; do not run readiness yet,
+    - never request private key value in chat.
+  - recommended commands:
+    - env-backed call: `node scripts/wallet-readiness-check.js --json`
+    - explicit flags: `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --wallet-address <0x...> --json`
 3. Run `token-balance-check` for native gas and target token balance sanity.
   - recommended command: `node scripts/token-balance-check.js --chain-id <id> --wallet-address <wallet> --token-address NATIVE --json`
 4. Run `query-chain-registry` for canonical chain/RPC/explorer context.
@@ -160,6 +173,7 @@ Rules:
 - Never ask users to paste API secrets or wallet credentials into chat.
 - Never transmit signer secrets to `clawdefi-core`.
 - Never install dependencies silently; announce install intent and wait for user confirmation first.
+- Never invoke `wallet-readiness-check` with bare `--json` unless `RPC_URL`, `CHAIN_ID`, and `PRIVATE_KEY` are already set in local env (or passed as explicit flags).
 - Always provide unwind path for leveraged or time-sensitive positions.
 
 ## 6) Update Policy
@@ -311,13 +325,18 @@ Notes:
   - optional `WALLET_ADDRESS` or `--wallet-address` (must match derived signer),
   - optional `MIN_NATIVE_BALANCE_WEI` / `--min-native-balance-wei`.
 - Standard run command:
-  - `node scripts/wallet-readiness-check.js --json`
+  - env-backed call:
+    - `node scripts/wallet-readiness-check.js --json`
+  - explicit flags:
+    - `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --wallet-address <0x...> --json`
 - Output contract:
   - `ok` boolean,
   - `walletAddress`, `chainId`, `rpcUrl`,
   - checks: `rpcHealthy`, `chainSelected`, `chainMatchesExpected`, `balanceSane`, `nonceReadable`, `signatureRoundtrip`,
   - metrics: `balanceWei`, `balanceEth`, `nonce`, `minNativeBalanceWei`.
 - Failure policy: fail closed; do not proceed to action planning/sign prompt until readiness passes with `ok=true`.
+- Invocation guard:
+  - if `RPC_URL`, `CHAIN_ID`, or `PRIVATE_KEY` is missing, stop and return `readiness_input_missing`; do not continue with a bare `--json` retry.
 
 ### token-balance-check
 - Priority: P0.

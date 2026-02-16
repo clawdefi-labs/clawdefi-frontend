@@ -146,16 +146,38 @@ function normalizeAddress(value, key) {
   return value.toLowerCase();
 }
 
-async function runChecks(config, ethers) {
+function assertRequiredReadinessInputs(config) {
+  const missing = [];
   if (!config.rpcUrl) {
-    throw new Error("Missing RPC URL. Set --rpc-url or RPC_URL.");
+    missing.push("RPC_URL or --rpc-url");
   }
   if (!config.chainId) {
-    throw new Error("Missing chain ID. Set --chain-id or CHAIN_ID.");
+    missing.push("CHAIN_ID or --chain-id");
   }
   if (!config.privateKey) {
-    throw new Error("Missing private key. Set --private-key or PRIVATE_KEY.");
+    missing.push("PRIVATE_KEY or --private-key");
   }
+  if (missing.length === 0) {
+    return;
+  }
+
+  throw new Error(
+    [
+      `Missing required readiness inputs: ${missing.join(", ")}.`,
+      "Do not run bare --json without required signer context.",
+      "Set local env first (example):",
+      "export RPC_URL='https://mainnet.base.org'",
+      "export CHAIN_ID='8453'",
+      "export PRIVATE_KEY='0x...'",
+      "node scripts/wallet-readiness-check.js --json",
+      "Or provide explicit flags:",
+      "node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --json"
+    ].join(" ")
+  );
+}
+
+async function runChecks(config, ethers) {
+  assertRequiredReadinessInputs(config);
 
   const expectedChainId = parsePositiveInt(config.chainId, "chainId");
   const provider = new ethers.JsonRpcProvider(config.rpcUrl);
@@ -257,6 +279,7 @@ function printResult(result, jsonMode) {
 
 async function main() {
   const config = parseArgs(process.argv.slice(2));
+  assertRequiredReadinessInputs(config);
   const ethers = loadEthers();
   const result = await runChecks(config, ethers);
   printResult(result, config.json);
