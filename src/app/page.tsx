@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import BinarySignalField from "@/components/BinarySignalField";
 import InstallSkillPanel from "@/components/InstallSkillPanel";
 import SiteVisitsCard from "@/components/SiteVisitsCard";
+import TronGrid from "@/components/TronGrid";
 
 const runtimeTrack = [
   {
@@ -65,40 +65,45 @@ const nextModules = [
 
 export default function Home() {
   return (
-    <main className="site-shell">
-      <div className="site-aura" aria-hidden="true" />
-
-      <header className="top-nav">
+    <main className="main-wrapper">
+      <TronGrid />
+      
+      <header className="nav-bar">
         <Link href="/" className="brand-mark">
           <Image
             src="/brand/clawdefi-logo.png"
             alt="ClawDeFi logo"
-            width={146}
-            height={108}
+            width={120}
+            height={88}
             priority
+            className="brand-logo"
           />
-          <span>ClawDeFi</span>
+          <span className="brand-text">ClawDeFi</span>
         </Link>
 
-        <nav className="top-links" aria-label="Primary navigation">
-          <a href="#install">Install</a>
-          <a href="#runtime">Runtime</a>
-          <a href="#modules">Modules</a>
-          <a href="/skill.md">skill.md</a>
+        <nav className="nav-menu">
+          <a href="#install" className="nav-link">Install</a>
+          <a href="#runtime" className="nav-link">Runtime</a>
+          <a href="#modules" className="nav-link">Modules</a>
+          <a href="/skill.md" className="nav-pill">skill.md</a>
         </nav>
       </header>
 
-      <section className="hero-grid reveal">
-        <div className="hero-copy">
-          <p className="kicker">The DeFi Intelligence Layer for the Agentic Future</p>
-          <h1>Install a DeFi brain on your agent.</h1>
-          <p className="hero-lead">
+      <section className="hero-edge">
+        <div className="hero-content">
+          <p className="kicker fade-in">The DeFi Intelligence Layer for the Agentic Future</p>
+          
+          <h1 className="hero-title fade-in delay-1">
+            Install a DeFi brain<br />on your agent.
+          </h1>
+          
+          <p className="hero-desc fade-in delay-2">
             We believe that, in the future, most financial decisions will be made by humans&apos;
             agentic companions. We&apos;re building the intelligence layer that lets agents query
             protocols, assess risk, and execute DeFi actions by intent.
           </p>
 
-          <div className="hero-cta">
+          <div className="hero-actions fade-in delay-3">
             <a href="#install" className="btn btn-solid">
               Install Skill
             </a>
@@ -107,119 +112,96 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="hero-metrics">
-            <article>
+          <div className="stats-grid fade-in delay-4">
+            <article className="stat-card">
               <p className="metric-value">20-step</p>
-              <p className="metric-label">runtime gate before signing</p>
+              <p className="metric-label">runtime gate</p>
             </article>
-            <article>
-              <p className="metric-value">1inch + Avantis</p>
-              <p className="metric-label">swap + perp integrations</p>
+            <article className="stat-card">
+              <p className="metric-value">1inch+</p>
+              <p className="metric-label">integrations</p>
             </article>
-            <article>
-              <p className="metric-value">User-custodied</p>
-              <p className="metric-label">local signer and secret storage</p>
+            <article className="stat-card">
+              <p className="metric-value">Local</p>
+              <p className="metric-label">custody</p>
             </article>
-            <SiteVisitsCard />
+             <div className="stat-card">
+                 <SiteVisitsCard />
+            </div>
           </div>
         </div>
+      </section>
 
-        <section className="signal-stage" aria-label="Binary signal field">
-          <BinarySignalField />
+      <div className="site-shell content-stack">
+        <section id="install" className="section-block">
+          <header className="section-head text-center">
+            <p className="section-kicker">Install Surface</p>
+            <h2>One canonical skill.</h2>
+          </header>
+          <div className="install-wrapper">
+             <InstallSkillPanel />
+          </div>
         </section>
-      </section>
 
-      <section className="section reveal" id="install">
-        <header className="section-head">
-          <p className="section-kicker">Install Surface</p>
-          <h2>One canonical skill, two delivery channels.</h2>
-          <p>
-            ClawHub for standard installs. Raw channel for direct domain-based bootstrap and
-            reproducible artifact hosting.
-          </p>
-        </header>
-        <InstallSkillPanel />
-      </section>
+        <section id="runtime" className="section-block">
+          <header className="section-head text-center">
+             <p className="section-kicker">Execution Runtime</p>
+             <h2>Safety first.</h2>
+          </header>
 
-      <section className="section reveal" id="runtime">
-        <header className="section-head">
-          <p className="section-kicker">Execution Runtime</p>
-          <h2>Operator flow tuned for safety and speed.</h2>
-        </header>
-
-        <div className="card-grid runtime-grid">
-          {runtimeTrack.map((item, index) => (
-            <article className="info-card" key={item.title}>
-              <p className="card-index">0{index + 1}</p>
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="section reveal">
-        <header className="section-head">
-          <p className="section-kicker">Data Core</p>
-          <h2>Databases built for deterministic agent decisions.</h2>
-        </header>
-
-        <div className="card-grid">
-          {corePlanes.map((item) => (
-            <article className="info-card" key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="section reveal" id="modules">
-        <header className="section-head">
-          <p className="section-kicker">Skill Modules</p>
-          <h2>Active modules now, expansion modules next.</h2>
-        </header>
-
-        <div className="module-columns">
-          <article className="module-box active">
-            <h3>Active in MVP</h3>
-            <ul>
-              {activeModules.map((module) => (
-                <li key={module}>{module}</li>
-              ))}
-            </ul>
-          </article>
-          <article className="module-box pending">
-            <h3>Next expansion</h3>
-            <ul>
-              {nextModules.map((module) => (
-                <li key={module}>{module}</li>
-              ))}
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section className="section reveal">
-        <div className="trust-band">
-          <div>
-            <p className="section-kicker">Policy Commitments</p>
-            <h2>No secret custody. No blind execution.</h2>
-            <p>
-              ClawDeFi agents do not ask users to paste private keys or seed phrases. Every
-              fund-impacting action passes explicit confirmation, simulation gates, and risk checks.
-            </p>
+          <div className="card-grid runtime-grid">
+            {runtimeTrack.map((item, index) => (
+              <article className="info-card" key={item.title}>
+                <p className="card-index">0{index + 1}</p>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            ))}
           </div>
-          <div className="trust-actions">
-            <a className="btn btn-solid" href="/skill.md">
-              Open Skill Contract
-            </a>
-            <a className="btn btn-outline" href="#install">
-              Install Now
-            </a>
+        </section>
+
+        <section className="section-block">
+           <header className="section-head text-center">
+             <p className="section-kicker">Data Core</p>
+             <h2>Deterministic Intelligence.</h2>
+          </header>
+
+          <div className="card-grid">
+            {corePlanes.map((item) => (
+              <article className="info-card" key={item.title}>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section id="modules" className="section-block">
+           <header className="section-head text-center">
+             <p className="section-kicker">Skill Modules</p>
+             <h2>Capabilities.</h2>
+          </header>
+
+          <div className="module-columns">
+            <article className="module-box active">
+              <h3>Active in MVP</h3>
+              <ul>
+                {activeModules.map((module) => (
+                  <li key={module}>{module}</li>
+                ))}
+              </ul>
+            </article>
+            <article className="module-box pending">
+              <h3>Next expansion</h3>
+              <ul>
+                {nextModules.map((module) => (
+                  <li key={module}>{module}</li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        </section>
+      </div>
 
       <footer className="site-footer">
         <p>© 2026 ClawDeFi. The DeFi Intelligence empowering the agentic future.</p>
