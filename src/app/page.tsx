@@ -74,10 +74,10 @@ export default function Home() {
           <Image
             src="/brand/clawdefi-logo.png"
             alt="ClawDeFi logo"
-            width={180}
-            height={52}
+            width={240}
+            height={60}
             priority
-            style={{ width: 'auto', height: '32px' }}
+            style={{ width: 'auto', height: '40px' }}
           />
         </Link>
 
