@@ -70,7 +70,7 @@ The landing page shows live visit stats from your backend analytics store (not f
 
 Required runtime env vars in Vercel:
 - `CORE_API_BASE_URL` (example: `https://api.clawdefi.ai`)
-- `INTERNAL_SERVICE_TOKEN` (must match core service token; server-only variable, never expose as `NEXT_PUBLIC_*`)
+- `ANALYTICS_SERVICE_TOKEN` (dedicated analytics token from core; server-only variable, never expose as `NEXT_PUBLIC_*`)
 
 Behavior:
 - Browser sends a lightweight pageview beacon to `/api/analytics/visit`.

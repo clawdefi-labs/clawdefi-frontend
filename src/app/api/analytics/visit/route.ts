@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const CORE_API_BASE_URL = process.env.CORE_API_BASE_URL?.trim() ?? "";
-const INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN?.trim() ?? "";
+const ANALYTICS_SERVICE_TOKEN = process.env.ANALYTICS_SERVICE_TOKEN?.trim() ?? "";
 
 function resolveIp(request: NextRequest): string | undefined {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -27,7 +27,7 @@ function normalizePathname(value: unknown): string {
 }
 
 export async function POST(request: NextRequest) {
-  if (!CORE_API_BASE_URL || !INTERNAL_SERVICE_TOKEN) {
+  if (!CORE_API_BASE_URL || !ANALYTICS_SERVICE_TOKEN) {
     return NextResponse.json(
       { accepted: false, reason: "analytics_not_configured" },
       { status: 202 }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-service-token": INTERNAL_SERVICE_TOKEN
+        "x-service-token": ANALYTICS_SERVICE_TOKEN
       },
       body: JSON.stringify({
         source: "frontend",

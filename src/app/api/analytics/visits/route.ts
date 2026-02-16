@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const CORE_API_BASE_URL = process.env.CORE_API_BASE_URL?.trim() ?? "";
-const INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN?.trim() ?? "";
+const ANALYTICS_SERVICE_TOKEN = process.env.ANALYTICS_SERVICE_TOKEN?.trim() ?? "";
 const DEFAULT_WINDOW_DAYS = 30;
 
 interface CoreSummaryResponse {
@@ -17,7 +17,7 @@ interface CoreSummaryResponse {
 }
 
 export async function GET() {
-  if (!CORE_API_BASE_URL || !INTERNAL_SERVICE_TOKEN) {
+  if (!CORE_API_BASE_URL || !ANALYTICS_SERVICE_TOKEN) {
     return NextResponse.json(
       {
         available: false,
@@ -37,7 +37,7 @@ export async function GET() {
       {
         method: "GET",
         headers: {
-          "x-service-token": INTERNAL_SERVICE_TOKEN
+          "x-service-token": ANALYTICS_SERVICE_TOKEN
         },
         cache: "no-store"
       }
