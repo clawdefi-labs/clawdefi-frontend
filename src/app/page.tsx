@@ -93,8 +93,9 @@ export default function Home() {
           <p className="kicker">The DeFi Intelligence Layer for the Agentic Future</p>
           <h1>Install a DeFi brain on your agent.</h1>
           <p className="hero-lead">
-            ClawDeFi combines protocol intelligence, deterministic risk checks, and operator-safe
-            workflows so agents can execute swap, perps, options, and yield actions with intent.
+            We believe that, in the future, most financial decisions will be made by humans&apos;
+            agentic companions. We&apos;re building the intelligence layer that lets agents query
+            protocols, assess risk, and execute DeFi actions by intent.
           </p>
 
           <div className="hero-cta">
