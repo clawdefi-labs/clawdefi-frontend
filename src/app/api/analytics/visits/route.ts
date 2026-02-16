@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 
 const CORE_API_BASE_URL = process.env.CORE_API_BASE_URL?.trim() ?? "";
 const ANALYTICS_SERVICE_TOKEN = process.env.ANALYTICS_SERVICE_TOKEN?.trim() ?? "";
-const DEFAULT_WINDOW_DAYS = 30;
 
 interface CoreSummaryResponse {
   enabled: boolean;
   source: string;
   eventType: string;
-  windowDays: number;
+  windowDays: number | null;
   route: string | null;
   totalEvents: number;
   uniqueVisitors: number;
@@ -21,7 +20,7 @@ export async function GET() {
     return NextResponse.json(
       {
         available: false,
-        windowDays: DEFAULT_WINDOW_DAYS,
+        windowDays: null,
         totalEvents: 0,
         uniqueVisitors: 0,
         lastEventAt: null,
@@ -33,7 +32,7 @@ export async function GET() {
 
   try {
     const response = await fetch(
-      `${CORE_API_BASE_URL}/api/v1/internal/analytics/summary?source=frontend&eventType=web_page_view&windowDays=${DEFAULT_WINDOW_DAYS}`,
+      `${CORE_API_BASE_URL}/api/v1/internal/analytics/summary?source=frontend&eventType=web_page_view`,
       {
         method: "GET",
         headers: {
@@ -46,7 +45,7 @@ export async function GET() {
       return NextResponse.json(
         {
           available: false,
-          windowDays: DEFAULT_WINDOW_DAYS,
+          windowDays: null,
           totalEvents: 0,
           uniqueVisitors: 0,
           lastEventAt: null,
@@ -60,7 +59,7 @@ export async function GET() {
     return NextResponse.json(
       {
         available: payload.enabled,
-        windowDays: payload.windowDays ?? DEFAULT_WINDOW_DAYS,
+        windowDays: payload.windowDays ?? null,
         totalEvents: payload.totalEvents ?? 0,
         uniqueVisitors: payload.uniqueVisitors ?? 0,
         lastEventAt: payload.lastEventAt ?? null
@@ -76,7 +75,7 @@ export async function GET() {
     return NextResponse.json(
       {
         available: false,
-        windowDays: DEFAULT_WINDOW_DAYS,
+        windowDays: null,
         totalEvents: 0,
         uniqueVisitors: 0,
         lastEventAt: null,
