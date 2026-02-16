@@ -103,15 +103,6 @@ export default function Home() {
             protocols, assess risk, and execute DeFi actions by intent.
           </p>
 
-          <div className="hero-actions fade-in delay-3">
-            <a href="#install" className="btn btn-solid">
-              Install Skill
-            </a>
-            <a href="/skill.md" className="btn btn-outline">
-              Read /skill.md
-            </a>
-          </div>
-
           <HeroMetrics />
         </div>
       </section>
