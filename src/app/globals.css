@@ -118,10 +118,10 @@ a {
   text-decoration: none;
 }
 
-.brand-mark img {
-  width: clamp(78px, 9vw, 100px);
+.brand-logo {
+  width: clamp(100px, 10vw, 200px);
   height: auto;
-  filter: drop-shadow(0 8px 22px rgba(67, 227, 169, 0.3));
+  filter: drop-shadow(0 8px 24px rgba(67, 227, 169, 0.35));
 }
 
 .brand-mark span {
@@ -859,6 +859,10 @@ a {
   .mobile-nav-container {
     display: flex;
     align-items: center;
+  }
+
+  .brand-logo {
+    width: 60px;
   }
 }
 

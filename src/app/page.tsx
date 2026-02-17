@@ -72,12 +72,13 @@ export default function Home() {
       <header className="nav-bar">
         <Link href="/" className="brand-mark">
           <Image
-            src="/brand/clawdefi-logo.png"
+            src="/brand/clawdefi-logo.png?v=20260217"
             alt="ClawDeFi logo"
-            width={240}
-            height={60}
+            width={120}
+            height={30}
+            className="brand-logo"
             priority
-            style={{ width: 'auto', height: '40px' }}
+            unoptimized
           />
         </Link>
 
