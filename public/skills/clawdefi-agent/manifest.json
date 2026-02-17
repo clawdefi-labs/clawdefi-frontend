@@ -1,8 +1,8 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "c65baaca00d8dfaae9182778e40bb2b5a793974d56e1eb28073c08d77e535235",
+  "sha256": "3c16fd1727fe45044afa51fa1e2bc65534a6e689fc5b9cab38928a33445838de",
   "files": [
     {
       "path": "scripts/install-raw.sh",
@@ -17,7 +17,7 @@
     {
       "path": "scripts/create-wallet.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/create-wallet.js",
-      "sha256": "8b7a0371b6fd3f7b94f509e8048359ba10d110058b982ea57557ccb12e40e81a"
+      "sha256": "669c4cba53c5f3a8f15c9ec53f557d77ec2cf8170f9bb58c8e252b89f6a94989"
     },
     {
       "path": "scripts/wallet-readiness-check.js",

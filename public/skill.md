@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.23
+version: 0.1.24
 description: The source of DeFi intelligence for agents. On first run, ask whether this machine/agent already has a configured wallet that can sign transactions locally (without sharing any private key or seed phrase). If yes, use it. If no, offer the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -68,6 +68,7 @@ Requirements:
 - dependency: `npm install ethers`,
 - bundled scripts: `scripts/create-wallet.js`, `scripts/wallet-readiness-check.js`, `scripts/token-balance-check.js`, `scripts/allowance-manager.js`, `scripts/simulate-transaction.js`, `scripts/swap-1inch.js`, `scripts/query-protocol.js`, `scripts/query-coingecko.js`, `scripts/query-pyth.js`, and `scripts/query-contract-verification.js`,
 - local secure env or secret-storage path for signer variables,
+- canonical wallet file path policy: `~/.openclaw/wallets/clawdefi-wallet.json`,
 - selected-chain RPC endpoint for balance/readiness checks.
 
 Credential source:
@@ -79,7 +80,12 @@ Setup:
   - `npm install ethers`
 - Create wallet in env-output mode using bundled script:
   - `node scripts/create-wallet.js --env`
+- Wallet path policy (must follow exactly):
+  - canonical path: `~/.openclaw/wallets/clawdefi-wallet.json`,
+  - if canonical file already exists and `--force` is not used, script creates `~/.openclaw/wallets/clawdefi-wallet-2.json`, then `-3`, and so on,
+  - only `--force` may overwrite the canonical file and must be explicitly user-approved before execution.
 - Persist `WALLET_ADDRESS` and `PRIVATE_KEY` in secure local environment storage.
+- persist `WALLET_FILE_PATH` from script output when present so runtime can rehydrate the same signer deterministically.
 - Build SIWE message (domain/URI, address, chain ID, nonce, issued-at timestamp) and sign with local key.
 
 Readiness checks:
@@ -100,7 +106,7 @@ Readiness checks:
 Security guard:
 - never print private key or seed in logs (the `--env` mode prints it to stdout intentionally; treat stdout as secret and do not run in CI or log-captured environments),
 - never transmit signer secrets to external services.
-- `--managed` file mode stores plaintext private key JSON at rest and is local-development only (not production).
+- `create-wallet.js` writes plaintext private key JSON at rest under `~/.openclaw/wallets`; use only on secured user-controlled machines and enforce filesystem permissions.
 
 #### future-wallet-modules
 - Status: not yet available.
@@ -124,6 +130,10 @@ Execution policy:
 - ask "Does this machine/agent already have a configured wallet that can sign transactions locally (without sharing any private key or seed phrase)?"
 - if yes, link existing signer.
 - if no, present wallet options in exact order, include pros/cons/requirements/credential-source notes, explicitly state that more wallet options will be available in future ClawDeFi releases, then run selected setup (`local-siwe-wallet`).
+- before creating a new wallet, check whether `~/.openclaw/wallets/clawdefi-wallet.json` already exists and ask user whether to reuse existing signer (default) or create an additional wallet file.
+- if canonical exists, explicitly tell user before creation:
+  - `Existing wallet detected at ~/.openclaw/wallets/clawdefi-wallet.json. Reuse it (recommended), create additional wallet (-2/-3...), or overwrite canonical with --force?`
+- never overwrite `~/.openclaw/wallets/clawdefi-wallet.json` unless user explicitly requests overwrite and command includes `--force`.
 2. Run `wallet-readiness-check` (chain, balance, nonce, RPC health, signature roundtrip).
   - preflight required keys/chain context:
     - ensure local runtime has `RPC_URL`, `CHAIN_ID`, and `PRIVATE_KEY` (or equivalent CLI flags),

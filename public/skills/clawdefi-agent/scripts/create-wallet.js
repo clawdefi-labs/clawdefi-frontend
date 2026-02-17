@@ -5,21 +5,34 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
+const WALLET_DIR = path.join(os.homedir(), ".openclaw", "wallets");
+const CANONICAL_WALLET_BASENAME = "clawdefi-wallet";
+
 function printUsage() {
   console.log("Usage:");
   console.log("  node scripts/create-wallet.js --env");
   console.log("  node scripts/create-wallet.js --json");
-  console.log("  node scripts/create-wallet.js --managed [wallet-name]");
+  console.log("  node scripts/create-wallet.js --managed");
+  console.log("  node scripts/create-wallet.js --env --force");
+  console.log("  node scripts/create-wallet.js --json --force");
+  console.log("  node scripts/create-wallet.js --managed --force");
   console.log("");
   console.log("Notes:");
-  console.log("  - You must pass an explicit mode flag (no default mode).");
+  console.log("  - You must pass an explicit mode flag: --env, --json, or --managed.");
   console.log("  - Requires dependency: npm install ethers");
-  console.log("  - --managed writes plaintext key JSON to disk (local development only).");
+  console.log(
+    "  - Wallet JSON is always written to ~/.openclaw/wallets/clawdefi-wallet.json (plaintext key at rest).",
+  );
+  console.log(
+    "  - If canonical file exists and --force is not set, a new file is created as clawdefi-wallet-2.json, then -3, ...",
+  );
+  console.log("  - --force overwrites the canonical wallet file path.");
+  console.log("  - Custom wallet names/paths are intentionally not supported.");
 }
 
 function parseArgs(argv) {
   let mode = null;
-  let managedName = "agent";
+  let force = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -38,22 +51,23 @@ function parseArgs(argv) {
     }
     if (arg === "--managed") {
       mode = "managed";
-      const maybeName = argv[i + 1];
-      if (maybeName && !maybeName.startsWith("-")) {
-        managedName = maybeName;
-        i += 1;
-      }
+      continue;
+    }
+    if (arg === "--force") {
+      force = true;
       continue;
     }
 
-    throw new Error(`Unknown argument: ${arg}`);
+    throw new Error(
+      `Unexpected argument: ${arg}. Custom wallet names/paths are disabled; use canonical policy only.`,
+    );
   }
 
   if (!mode) {
     throw new Error("No mode selected. Use --env, --json, or --managed.");
   }
 
-  return { mode, managedName };
+  return { mode, force };
 }
 
 function loadWalletFactory() {
@@ -81,10 +95,9 @@ function ensureDirSecure(dirPath) {
 }
 
 function appendAudit(event, details) {
-  const auditDir = path.join(os.homedir(), ".openclaw", "wallets");
-  ensureDirSecure(auditDir);
+  ensureDirSecure(WALLET_DIR);
 
-  const logPath = path.join(auditDir, "audit.log");
+  const logPath = path.join(WALLET_DIR, "audit.log");
   const row = JSON.stringify({
     ts: new Date().toISOString(),
     event,
@@ -99,17 +112,49 @@ function appendAudit(event, details) {
   }
 }
 
-function writeManagedWalletFile(payload, managedName) {
-  if (!/^[a-zA-Z0-9._-]+$/.test(managedName)) {
-    throw new Error(
-      "Invalid wallet name. Use only letters, numbers, dot, underscore, or dash.",
-    );
+function getCanonicalWalletPath() {
+  return path.join(WALLET_DIR, `${CANONICAL_WALLET_BASENAME}.json`);
+}
+
+function getIndexedWalletPath(index) {
+  return path.join(WALLET_DIR, `${CANONICAL_WALLET_BASENAME}-${index}.json`);
+}
+
+function resolveWalletOutPath(force) {
+  ensureDirSecure(WALLET_DIR);
+
+  const canonicalPath = getCanonicalWalletPath();
+  const canonicalExists = fs.existsSync(canonicalPath);
+
+  if (force || !canonicalExists) {
+    return {
+      canonicalPath,
+      outPath: canonicalPath,
+      canonicalExists,
+      createdAdditional: false,
+      additionalIndex: null,
+      overwroteCanonical: force && canonicalExists,
+    };
   }
 
-  const walletsDir = path.join(os.homedir(), ".openclaw", "wallets");
-  ensureDirSecure(walletsDir);
+  for (let index = 2; index < 10000; index += 1) {
+    const candidate = getIndexedWalletPath(index);
+    if (!fs.existsSync(candidate)) {
+      return {
+        canonicalPath,
+        outPath: candidate,
+        canonicalExists: true,
+        createdAdditional: true,
+        additionalIndex: index,
+        overwroteCanonical: false,
+      };
+    }
+  }
 
-  const outPath = path.join(walletsDir, `${managedName}.json`);
+  throw new Error("Unable to allocate wallet filename. Too many wallet files already exist.");
+}
+
+function writeWalletFile(payload, outPath) {
   fs.writeFileSync(outPath, `${JSON.stringify(payload, null, 2)}\n`, {
     mode: 0o600,
   });
@@ -121,6 +166,24 @@ function writeManagedWalletFile(payload, managedName) {
   return outPath;
 }
 
+function printPathNoticeBeforeCreate(pathInfo) {
+  if (pathInfo.overwroteCanonical) {
+    console.error(
+      `WARNING: --force enabled. Existing canonical wallet at ${pathInfo.canonicalPath} will be overwritten.`,
+    );
+    return;
+  }
+
+  if (pathInfo.createdAdditional) {
+    console.error(
+      `NOTICE: Existing canonical wallet detected at ${pathInfo.canonicalPath}.`,
+    );
+    console.error(
+      `NOTICE: Creating additional wallet at ${pathInfo.outPath}. Use --force to overwrite canonical wallet instead.`,
+    );
+  }
+}
+
 function main() {
   const argv = process.argv.slice(2);
   if (argv.length === 0) {
@@ -128,41 +191,64 @@ function main() {
     process.exit(2);
   }
 
-  const { mode, managedName } = parseArgs(argv);
+  const { mode, force } = parseArgs(argv);
   const Wallet = loadWalletFactory();
   const wallet = Wallet.createRandom();
+  const pathInfo = resolveWalletOutPath(force);
 
   const payload = {
     address: wallet.address,
     privateKey: wallet.privateKey,
     createdAt: new Date().toISOString(),
   };
+  printPathNoticeBeforeCreate(pathInfo);
+  writeWalletFile(payload, pathInfo.outPath);
+
+  const outputPayload = {
+    ...payload,
+    walletFilePath: pathInfo.outPath,
+    canonicalWalletFilePath: pathInfo.canonicalPath,
+    createdAdditionalWallet: pathInfo.createdAdditional,
+    overwrittenCanonicalWallet: pathInfo.overwroteCanonical,
+  };
+
+  const auditDetails = {
+    mode,
+    address: payload.address,
+    path: pathInfo.outPath,
+    canonicalPath: pathInfo.canonicalPath,
+    force,
+    createdAdditionalWallet: pathInfo.createdAdditional,
+    additionalIndex: pathInfo.additionalIndex,
+    overwrittenCanonicalWallet: pathInfo.overwroteCanonical,
+  };
 
   if (mode === "json") {
-    console.log(JSON.stringify(payload, null, 2));
-    appendAudit("wallet_created", { mode: "json", address: payload.address });
+    console.log(JSON.stringify(outputPayload, null, 2));
+    appendAudit("wallet_created", auditDetails);
     return;
   }
 
   if (mode === "managed") {
-    const outPath = writeManagedWalletFile(payload, managedName);
-    console.log(`Wallet created: ${payload.address}`);
-    console.log(`Stored at: ${outPath}`);
-    console.log("WARNING: --managed stores plaintext private key on disk. Use local development only.");
-    appendAudit("wallet_created", {
-      mode: "managed",
-      address: payload.address,
-      path: outPath,
-    });
+    console.log(`Wallet created: ${outputPayload.address}`);
+    console.log(`Stored at: ${outputPayload.walletFilePath}`);
+    console.log(
+      "WARNING: Wallet file stores plaintext private key on disk. Use only on a secured local machine.",
+    );
+    appendAudit("wallet_created", auditDetails);
     return;
   }
 
   console.error(
     "WARNING: --env prints the private key to stdout. Run only in a secure local terminal; do not run in CI or anywhere stdout is logged.",
   );
-  console.log(`export WALLET_ADDRESS="${payload.address}"`);
-  console.log(`export PRIVATE_KEY="${payload.privateKey}"`);
-  appendAudit("wallet_created", { mode: "env", address: payload.address });
+  console.error(
+    "WARNING: Wallet file stores plaintext private key on disk. Use only on a secured local machine.",
+  );
+  console.log(`export WALLET_ADDRESS="${outputPayload.address}"`);
+  console.log(`export PRIVATE_KEY="${outputPayload.privateKey}"`);
+  console.log(`export WALLET_FILE_PATH="${outputPayload.walletFilePath}"`);
+  appendAudit("wallet_created", auditDetails);
 }
 
 try {
