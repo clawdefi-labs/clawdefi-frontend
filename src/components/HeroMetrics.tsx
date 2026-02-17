@@ -1,4 +1,5 @@
 import SiteVisitsCard from "./SiteVisitsCard";
+import DatabaseQueriesCard from "./DatabaseQueriesCard";
 
 export default function HeroMetrics() {
   return (
@@ -8,12 +9,10 @@ export default function HeroMetrics() {
         <SiteVisitsCard />
       </div>
 
-      {/* Database Queries (Placeholder) */}
-      <article className="stat-card">
-        <p className="metric-value">13,702</p>
-        <p className="metric-label">total database queries</p>
-        <p className="metric-subtle">verified agentic operations</p>
-      </article>
+      {/* Dynamic Database Queries (Live Data) */}
+      <div className="stat-card">
+        <DatabaseQueriesCard />
+      </div>
 
       {/* Protocols Supported (Placeholder) */}
       <article className="stat-card">
