@@ -115,8 +115,8 @@ export default function Home() {
       <div className="site-shell content-stack">
         <section id="install" className="section-block">
           <header className="section-head text-center">
-            <p className="section-kicker">Install Surface</p>
-            <h2>One canonical skill.</h2>
+            <h2>INSTALL INSTRUCTIONS</h2>
+            <p className="section-kicker">One canonical skill that your agent needs.</p>
           </header>
           <div className="install-wrapper">
              <InstallSkillPanel />
@@ -125,8 +125,8 @@ export default function Home() {
 
         <section id="runtime" className="section-block">
           <header className="section-head text-center">
-             <p className="section-kicker">Execution Runtime</p>
-             <h2>Safety first.</h2>
+             <h2>EXECUTION RUNTIME</h2>
+             <p className="section-kicker">Safety first.</p>
           </header>
 
           <div className="card-grid runtime-grid">
@@ -142,8 +142,8 @@ export default function Home() {
 
         <section className="section-block">
            <header className="section-head text-center">
-             <p className="section-kicker">Data Core</p>
-             <h2>Deterministic Intelligence.</h2>
+             <h2>DATA CORE</h2>
+             <p className="section-kicker">Deterministic intelligence.</p>
           </header>
 
           <div className="card-grid">
@@ -158,8 +158,8 @@ export default function Home() {
 
         <section id="modules" className="section-block">
            <header className="section-head text-center">
-             <p className="section-kicker">Skill Modules</p>
-             <h2>Capabilities.</h2>
+             <h2>SKILL MODULES</h2>
+             <p className="section-kicker">Capabilities.</p>
           </header>
 
           <div className="module-columns">

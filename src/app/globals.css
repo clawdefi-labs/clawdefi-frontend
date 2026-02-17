@@ -362,9 +362,10 @@ a {
 }
 
 .section-head h2 {
-  margin: 10px 0 0;
-  font-size: clamp(1.5rem, 3.1vw, 2.35rem);
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .section-head p {
@@ -374,7 +375,25 @@ a {
   max-width: 68ch;
 }
 
+.section-head {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-center .section-kicker,
+.text-center h2,
+.text-center p {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .install-panel {
+  position: relative;
   margin-top: 20px;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -382,9 +401,25 @@ a {
   padding: 14px;
 }
 
+.install-body {
+  position: relative;
+}
+
+.install-measure-layer {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.install-measure-item {
+  width: 100%;
+}
+
 .install-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -672,6 +707,10 @@ a {
 
   .install-code {
     font-size: 0.76rem;
+  }
+
+  .install-tabs {
+    grid-template-columns: 1fr;
   }
 
   .site-footer {
