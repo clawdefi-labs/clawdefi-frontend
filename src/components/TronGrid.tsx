@@ -41,25 +41,28 @@ export default function TronGrid() {
     const project = (x: number, y: number, z: number) => {
       const scale = fov / (viewDist + z);
       const x2d = (x * scale) + width / 2;
-      // Horizon at middle for maximum sky space
-      const horizonY = height * 0.5;
+      // Push horizon lower so glow sits behind metrics instead of headline copy
+      const horizonY = height * 0.62;
       const y2d = (y * scale) + horizonY; 
       return { x: x2d, y: y2d, scale };
     };
 
     const animate = (time: number) => {
       // Deep space background
-      ctx.fillStyle = "#020408";
+      ctx.fillStyle = "#0f0704";
       ctx.fillRect(0, 0, width, height);
 
-      // Atmospheric glow at horizon
+      // Atmospheric glow at horizon (kept very subtle so content remains primary)
       const glow = ctx.createLinearGradient(0, 0, 0, height);
-      glow.addColorStop(0, "#010204");
-      glow.addColorStop(0.38, "#0a1f2e");
-      glow.addColorStop(0.45, "#020408");
-      glow.addColorStop(1, "#030812");
+      glow.addColorStop(0, "#090302");
+      glow.addColorStop(0.38, "#130805");
+      glow.addColorStop(0.45, "#0f0603");
+      glow.addColorStop(1, "#100703");
+      ctx.save();
+      ctx.globalAlpha = 0.55;
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, width, height);
+      ctx.restore();
 
       offset = (offset + speed) % spacing;
 
@@ -85,7 +88,7 @@ export default function TronGrid() {
             const z = (i / segments) * gridDepth;
             const p = project(x, getWaveY(z), z);
             const alpha = Math.max(0, 0.4 - (z / gridDepth));
-            ctx.strokeStyle = `rgba(89, 242, 215, ${alpha})`;
+            ctx.strokeStyle = `rgba(255, 159, 84, ${alpha})`;
             ctx.lineTo(p.x, p.y);
             ctx.stroke();
             ctx.beginPath();
@@ -100,7 +103,7 @@ export default function TronGrid() {
         if (currentZ < 10) continue;
 
         const alpha = Math.max(0, 0.6 * (1 - (currentZ / (gridDepth * 0.7))));
-        ctx.strokeStyle = `rgba(89, 242, 215, ${alpha})`;
+        ctx.strokeStyle = `rgba(255, 159, 84, ${alpha})`;
         
         ctx.beginPath();
         // Path follows the same wave logic
@@ -127,7 +130,7 @@ export default function TronGrid() {
             for (let xIdx = -4; xIdx <= 4; xIdx++) {
                 if (xIdx % 2 !== 0) continue;
                 const p = project(xIdx * spacing, 120, currentZ);
-                ctx.fillStyle = `rgba(124, 255, 230, ${alpha * 0.8})`;
+                ctx.fillStyle = `rgba(255, 204, 143, ${alpha * 0.8})`;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 2 * p.scale, 0, Math.PI * 2);
                 ctx.fill();
@@ -159,7 +162,7 @@ export default function TronGrid() {
 
           const alpha = Math.max(0, 0.8 * (1 - (pulse.z / gridDepth)));
           const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-          grad.addColorStop(0, `rgba(89, 242, 215, ${alpha})`);
+          grad.addColorStop(0, `rgba(255, 122, 47, ${alpha})`);
           grad.addColorStop(1, "transparent");
           
           ctx.strokeStyle = grad;
@@ -184,8 +187,8 @@ export default function TronGrid() {
   return (
     <canvas 
       ref={canvasRef} 
-      className="tron-grid-canvas"
-      style={{ 
+        className="tron-grid-canvas"
+        style={{ 
         position: 'fixed',
         top: 0,
         left: 0,
@@ -193,7 +196,7 @@ export default function TronGrid() {
         height: '100%',
         pointerEvents: 'none',
         zIndex: -1,
-        background: '#020408'
+        background: '#0f0704'
       }}
     />
   );
