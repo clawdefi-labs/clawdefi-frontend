@@ -33,8 +33,8 @@ export default function RootLayout({
       <body className={`${spaceGrotesk.className} ${ibmPlexMono.variable}`}>
         <div className="alpha-banner" role="status" aria-live="polite">
           <span className="alpha-banner-label">DISCLAIMER:</span> ClawDeFi is currently in alpha
-          testing. OpenClaw and other autonomous agents are powerful but still early-stage
-          systems. Use with extreme caution.
+          testing. OpenClaw and other autonomous agents are powerful but still very early-stage
+          systems. Use with EXTREME CAUTION.
         </div>
         {children}
         <VisitBeacon />
