@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
-import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { IBM_Plex_Mono } from "next/font/google";
+import "@fontsource/vt323";
 import VisitBeacon from "@/components/VisitBeacon";
 import "./globals.css";
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -30,12 +25,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${spaceGrotesk.className} ${ibmPlexMono.variable}`}>
-        <div className="alpha-banner" role="status" aria-live="polite">
+      <body className={`pixel-theme ${ibmPlexMono.variable}`}>
+        <div className="alpha-banner pixel-border" role="status" aria-live="polite">
           <span className="alpha-banner-label">DISCLAIMER:</span> ClawDeFi is currently in alpha
           testing. OpenClaw and other autonomous agents are powerful but still very early-stage
           systems. Use with EXTREME CAUTION.
         </div>
+        <div className="pixel-scanlines"></div>
         {children}
         <VisitBeacon />
         <Analytics />
