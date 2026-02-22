@@ -2,17 +2,17 @@
   "name": "clawdefi-agent",
   "version": "0.1.24",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "3c16fd1727fe45044afa51fa1e2bc65534a6e689fc5b9cab38928a33445838de",
+  "sha256": "48518108d8418c3b66b08c509876d74aaa696ed49ab2af7cbfb569cecc238d84",
   "files": [
     {
       "path": "scripts/install-raw.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/install-raw.sh",
-      "sha256": "5140682adbf7a1c1d05b0fe6e615df899fc290cf7332e236d8b93dfcd2463002"
+      "sha256": "e5afbecc3fb4fce275e3327c115344da2ad6b18419d9341dcb439e9d17965e20"
     },
     {
       "path": "scripts/update-from-manifest.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/update-from-manifest.sh",
-      "sha256": "06c7a433f1e812c18147a51636c1398f0e9cd3eb10987aa269f81b7aea8df6cf"
+      "sha256": "c14a9d0908bbe0015244ccdf4e961f822af3e7ff5fef41511fda75bd6cdf8bf7"
     },
     {
       "path": "scripts/create-wallet.js",
@@ -53,6 +53,11 @@
       "path": "scripts/query-coingecko.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-coingecko.js",
       "sha256": "45ba0f9a35aeb9ee2e228d82185e034a9bbfebfb9a5c14e99dd8b443631c20f9"
+    },
+    {
+      "path": "scripts/query-avantis.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/query-avantis.js",
+      "sha256": "ec9040125dfa2ea4d3fde8663ae6951de5a4216a5bec20a194b11a8aa68fd9c3"
     },
     {
       "path": "scripts/query-pyth.js",

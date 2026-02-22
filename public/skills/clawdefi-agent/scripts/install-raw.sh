@@ -14,6 +14,7 @@ RUNTIME_FILES=(
   "scripts/swap-1inch.js"
   "scripts/query-protocol.js"
   "scripts/query-coingecko.js"
+  "scripts/query-avantis.js"
   "scripts/query-pyth.js"
   "scripts/token-balance-check.js"
   "scripts/query-contract-verification.js"
