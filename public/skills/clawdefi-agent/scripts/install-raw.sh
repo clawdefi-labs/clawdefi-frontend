@@ -2,8 +2,10 @@
 set -euo pipefail
 
 SKILL_NAME="${SKILL_NAME:-clawdefi-agent}"
-SKILL_URL="${SKILL_URL:-https://www.clawdefi.ai/skills/${SKILL_NAME}/SKILL.md}"
-MANIFEST_URL="${MANIFEST_URL:-https://www.clawdefi.ai/skills/${SKILL_NAME}/manifest.json}"
+SKILLS_BASE_URL="${SKILLS_BASE_URL:-https://skills.clawdefi.ai}"
+SKILL_URL="${SKILL_URL:-${SKILLS_BASE_URL}/${SKILL_NAME}/SKILL.md}"
+MANIFEST_URL="${MANIFEST_URL:-${SKILLS_BASE_URL}/${SKILL_NAME}/manifest.json}"
+SKILLS_AUTH_TOKEN="${SKILLS_AUTH_TOKEN:-}"
 TARGET_ROOT="${TARGET_ROOT:-$HOME/.openclaw/skills}"
 TARGET_DIR="${TARGET_ROOT}/${SKILL_NAME}"
 RUNTIME_FILES=(
@@ -19,6 +21,14 @@ RUNTIME_FILES=(
   "scripts/token-balance-check.js"
   "scripts/query-contract-verification.js"
 )
+
+auth_curl() {
+  if [ -n "$SKILLS_AUTH_TOKEN" ]; then
+    curl -fsSL -H "Authorization: Bearer ${SKILLS_AUTH_TOKEN}" "$@"
+  else
+    curl -fsSL "$@"
+  fi
+}
 
 sha256_file() {
   local file_path="$1"
@@ -44,7 +54,7 @@ skill_tmp="${tmp_dir}/SKILL.md"
 trap 'rm -rf "$tmp_dir"' EXIT
 
 manifest_present=0
-if curl -fsSL "$MANIFEST_URL" -o "$manifest_tmp"; then
+if auth_curl "$MANIFEST_URL" -o "$manifest_tmp"; then
   manifest_present=1
 fi
 
@@ -64,7 +74,7 @@ elif [ "$manifest_present" -eq 1 ]; then
   echo "Warning: manifest downloaded but jq is not installed; skipping manifest metadata/checksum parsing." >&2
 fi
 
-curl -fsSL "$download_skill_url" -o "$skill_tmp"
+auth_curl "$download_skill_url" -o "$skill_tmp"
 
 if ! grep -q "^name: ${SKILL_NAME}$" "$skill_tmp"; then
   echo "Downloaded file does not appear to match skill name: ${SKILL_NAME}" >&2
@@ -100,7 +110,7 @@ for runtime_file in "${RUNTIME_FILES[@]}"; do
     fi
   fi
 
-  curl -fsSL "$runtime_url" -o "$runtime_tmp"
+  auth_curl "$runtime_url" -o "$runtime_tmp"
 
   if [ -n "$expected_runtime_sha" ]; then
     actual_runtime_sha="$(sha256_file "$runtime_tmp")"

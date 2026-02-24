@@ -2,7 +2,9 @@
 set -euo pipefail
 
 SKILL_NAME="${SKILL_NAME:-clawdefi-agent}"
-MANIFEST_URL="${MANIFEST_URL:-https://www.clawdefi.ai/skills/${SKILL_NAME}/manifest.json}"
+SKILLS_BASE_URL="${SKILLS_BASE_URL:-https://skills.clawdefi.ai}"
+MANIFEST_URL="${MANIFEST_URL:-${SKILLS_BASE_URL}/${SKILL_NAME}/manifest.json}"
+SKILLS_AUTH_TOKEN="${SKILLS_AUTH_TOKEN:-}"
 TARGET_ROOT="${TARGET_ROOT:-$HOME/.openclaw/skills}"
 TARGET_DIR="${TARGET_ROOT}/${SKILL_NAME}"
 TARGET_FILE="${TARGET_DIR}/SKILL.md"
@@ -19,6 +21,14 @@ RUNTIME_FILES=(
   "scripts/token-balance-check.js"
   "scripts/query-contract-verification.js"
 )
+
+auth_curl() {
+  if [ -n "$SKILLS_AUTH_TOKEN" ]; then
+    curl -fsSL -H "Authorization: Bearer ${SKILLS_AUTH_TOKEN}" "$@"
+  else
+    curl -fsSL "$@"
+  fi
+}
 
 hash_file() {
   local file_path="$1"
@@ -48,7 +58,7 @@ manifest_tmp="${tmp_dir}/manifest.json"
 skill_tmp="${tmp_dir}/SKILL.md"
 trap 'rm -rf "$tmp_dir"' EXIT
 
-curl -fsSL "$MANIFEST_URL" -o "$manifest_tmp"
+auth_curl "$MANIFEST_URL" -o "$manifest_tmp"
 
 remote_version="$(jq -r '.version' "$manifest_tmp")"
 remote_skill_url="$(jq -r '.skill_url' "$manifest_tmp")"
@@ -59,7 +69,7 @@ if [ -z "$remote_version" ] || [ "$remote_version" = "null" ] || [ -z "$remote_s
   exit 1
 fi
 
-curl -fsSL "$remote_skill_url" -o "$skill_tmp"
+auth_curl "$remote_skill_url" -o "$skill_tmp"
 
 actual_sha256="$(hash_file "$skill_tmp")"
 
@@ -98,7 +108,7 @@ for runtime_file in "${RUNTIME_FILES[@]}"; do
     runtime_url="$(dirname "$remote_skill_url")/${runtime_file}"
   fi
 
-  curl -fsSL "$runtime_url" -o "$runtime_tmp"
+  auth_curl "$runtime_url" -o "$runtime_tmp"
   downloaded_runtime_sha256="$(hash_file "$runtime_tmp")"
 
   if [ -n "$runtime_sha256" ]; then
