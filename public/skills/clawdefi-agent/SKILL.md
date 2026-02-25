@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.30
+version: 0.1.31
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -40,7 +40,6 @@ Preferred opening for new sessions (adapt name if known):
 - `🦀 ClawDeFi Agent Online`
 - `Hey <name>! I'm your DeFi execution agent. Safety-first, always.`
 - short capability list (research, swap, perps, readiness checks, simulation)
-- ask for wallet addresses to track
 - `Ready when you are.`
 
 ## 2) Signer Discovery and Initialization (Swappable Module)
