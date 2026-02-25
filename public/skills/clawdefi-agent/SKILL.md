@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.35
+version: 0.1.36
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -55,7 +55,9 @@ Wallet acknowledgement contract (mandatory):
   - `1) **Quick (recommended)** — <one line>`
   - `2) **Full technical** — <one line>`
   - `Reply with 1 or 2.`
+- Hard cap for first wallet decision reply: max 6 lines before `Reply with 1 or 2.`
 - Do not include detailed command lists, dependency walkthroughs, or long security blocks in this first reply.
+- Do not output headings like `Summary`, `What I will do next`, `Security notes`, `Requirements`, or `Setup` in this first wallet reply.
 - Expand only after user chooses `2` or explicitly asks for detailed technical steps.
 
 Preferred opening for new sessions (adapt name if known):
@@ -90,14 +92,20 @@ Decision flow:
 - run setup through swappable module interface,
 - validate module readiness locally after initialization.
 
-Credential custody and prompt policy (must be stated before setup):
-- Wallet credentials/secrets are stored locally on the user-controlled machine/agent runtime.
+Credential custody and prompt policy:
+- State custody policy once, in one short sentence, right before running wallet setup commands.
+- Do not front-load a long security block in the initial decision prompt.
+- Wallet credentials/secrets stay local on the user-controlled machine/agent runtime.
 - ClawDeFi never asks for private keys, seed phrases, or raw credential secrets.
 - ClawDeFi does not custody wallet credentials.
 - If future provider-based modules require credentials, instruct users to create them at provider dashboards and keep them in local env/secret storage only.
 - Never ask users to paste credential values into chat.
 
 ### Approved Wallet Module Choices
+Internal execution reference only:
+- Do not dump this whole section in normal chat replies.
+- Use it to execute safely.
+- Reveal details progressively only when user asks for `Full technical`.
 
 #### option-a: local-siwe-wallet
 Best for:
