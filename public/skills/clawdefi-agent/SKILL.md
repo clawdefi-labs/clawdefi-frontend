@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.28
+version: 0.1.30
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -168,7 +168,7 @@ Execution policy:
   - recommended commands:
     - env-backed call: `node scripts/wallet-readiness-check.js --json`
     - explicit flags: `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --wallet-address <0x...> --json`
-3. Run `token-balance-check` for native gas and target token balance sanity.
+3. Run `wallet-token-balance-check` for native gas and target token balance sanity.
   - recommended command: `node scripts/token-balance-check.js --chain-id <id> --wallet-address <wallet> --token-address NATIVE --json`
 4. Run `query-chain-registry` for canonical chain/RPC/explorer context.
 5. Run `query-protocol` for protocol overview and supported chain/action context from `clawdefi-core`.
@@ -182,7 +182,7 @@ Execution policy:
 13. Run `query-integration-endpoint` to fetch official endpoint/method/auth/rate-limit guidance.
 14. Run `simulate-transaction` before any sign request.
   - recommended command: `node scripts/simulate-transaction.js --to <target> --data <calldata> --json`
-15. When action requires ERC20 approvals, run `allowance-manager` before tx build/sign.
+15. When action requires ERC20 approvals, run `wallet-allowance-manager` before tx build/sign.
 16. For swap actions, run `swap` (1inch-first routing) and keep `simulate-transaction` as a hard pre-sign gate.
 17. For perp actions, run `trade-perp` with local Python Avantis SDK flow (no MCP required in MVP), and handle TP/SL explicitly (execute+verify or return `tp_sl_not_configured`).
 18. Run `build-unwind-plan` and show fallback path before execution confirmation.
@@ -245,7 +245,28 @@ Notes:
   - `sha256sum` or `shasum` required for local checksum verification.
 - `references/` is local-only and is intentionally not installed by raw installer scripts.
 
-## 8) Placeholder Action Modules
+## 8) Action Modules (Grouped)
+
+### wallet-create-new-wallet
+- Priority: P0.
+- Status: active.
+- Module ID: `wallet-create-new-wallet`.
+- Purpose: create a new local signer file using deterministic wallet path policy.
+- Implementation path: `scripts/create-wallet.js`.
+- Standard run command:
+  - `node scripts/create-wallet.js --env`
+- Output contract:
+  - generated signer context (`WALLET_ADDRESS`, `PRIVATE_KEY`, optional `WALLET_FILE_PATH`),
+  - deterministic path behavior (`clawdefi-wallet.json`, then `-2/-3/...` without `--force`).
+- Execution policy:
+  - check canonical wallet file first,
+  - create additional wallet by default when canonical exists,
+  - only overwrite canonical when user explicitly requests overwrite and `--force` is passed,
+  - before any `--force` execution, show irreversible-risk warning and require explicit confirmation (`are you sure?`) in the same session.
+- Safety rule:
+  - treat command output as secret,
+  - never paste private key material into chat logs,
+  - remind user that losing/overwriting wallet key material can make funds unrecoverable.
 
 ### query-chain-registry
 - Priority: P0.
@@ -375,10 +396,10 @@ Notes:
 - Invocation guard:
   - if `RPC_URL`, `CHAIN_ID`, or `PRIVATE_KEY` is missing, stop and return `readiness_input_missing`; do not continue with a bare `--json` retry.
 
-### token-balance-check
+### wallet-token-balance-check
 - Priority: P0.
 - Status: active in MVP (implemented as local bundled module).
-- Module ID: `token-balance-check`.
+- Module ID: `wallet-token-balance-check`.
 - Purpose: read native or ERC20 token balance for a wallet on a selected chain before planning or signing.
 - Implementation path: `scripts/token-balance-check.js`.
 - Required inputs:
@@ -437,7 +458,7 @@ Notes:
   - execute mode: tx hash, confirmation result, and execution warnings.
 - Execution policy:
   - always run `simulate-transaction` as a hard gate before sign prompt,
-  - use `allowance-manager` first for ERC20 allowance planning when needed,
+  - use `wallet-allowance-manager` first for ERC20 allowance planning when needed,
   - fail closed on API/RPC errors, chain mismatch, preflight simulation failure, or policy breaches.
 - Safety rule:
   - never execute if action-spec or integration policy disallows selected token pair/route,
@@ -445,10 +466,10 @@ Notes:
 - Fallback:
   - if 1inch route/build fails, return no-safe-route and stop automated execution (do not silently fall back to unknown routers).
 
-### allowance-manager
+### wallet-allowance-manager
 - Priority: P1.
 - Status: active in MVP (local planning module).
-- Module ID: `allowance-manager`.
+- Module ID: `wallet-allowance-manager`.
 - Purpose: check current ERC20 allowance and build deterministic approval/revoke transaction plan.
 - Implementation path: `scripts/allowance-manager.js` (IERC20 ABI-based: `allowance`, `approve`, optional `symbol` and `decimals`).
 - Required inputs:
@@ -564,7 +585,7 @@ Notes:
   - if TP/SL cannot be placed, return `tp_sl_not_configured` and downgrade recommendation to `no_trade` unless user explicitly accepts proceeding without TP/SL.
 - Execution policy:
   - no MCP execution dependency for this module in MVP; run locally in Python runtime,
-  - require `wallet-readiness-check`, `token-balance-check`, and explicit risk confirmation before trade open,
+  - require `wallet-readiness-check`, `wallet-token-balance-check`, and explicit risk confirmation before trade open,
   - require chain and contract sanity checks before signing,
   - for market/limit opens, validate and echo TP/SL intent (`enabled`/`disabled`) before final sign prompt,
   - for open-position monitoring, report Avantis-native/Pyth-backed values as primary and label CoinGecko as advisory only.

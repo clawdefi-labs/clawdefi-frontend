@@ -7,6 +7,13 @@ const path = require("node:path");
 
 const WALLET_DIR = path.join(os.homedir(), ".openclaw", "wallets");
 const CANONICAL_WALLET_BASENAME = "clawdefi-wallet";
+const DEFAULT_PROFILE_PATH = path.join(
+  os.homedir(),
+  ".openclaw",
+  "skills",
+  "clawdefi-agent",
+  "profile.json",
+);
 
 function printUsage() {
   console.log("Usage:");
@@ -27,6 +34,7 @@ function printUsage() {
     "  - If canonical file exists and --force is not set, a new file is created as clawdefi-wallet-2.json, then -3, ...",
   );
   console.log("  - --force overwrites the canonical wallet file path.");
+  console.log("  - Public wallet addresses are synced to ~/.openclaw/skills/clawdefi-agent/profile.json (or $CLAWDEFI_PROFILE_PATH).");
   console.log("  - Custom wallet names/paths are intentionally not supported.");
 }
 
@@ -110,6 +118,55 @@ function appendAudit(event, details) {
   } catch (_) {
     // best-effort hardening only
   }
+}
+
+function resolveProfilePath() {
+  const override = process.env.CLAWDEFI_PROFILE_PATH;
+  if (override && override.trim()) {
+    return override.trim();
+  }
+  return DEFAULT_PROFILE_PATH;
+}
+
+function syncPublicWalletProfile(address) {
+  const profilePath = resolveProfilePath();
+  const profileDir = path.dirname(profilePath);
+  ensureDirSecure(profileDir);
+
+  let profile = {};
+  if (fs.existsSync(profilePath)) {
+    try {
+      const raw = fs.readFileSync(profilePath, "utf8");
+      profile = raw.trim() ? JSON.parse(raw) : {};
+    } catch (_) {
+      profile = {};
+    }
+  }
+
+  const currentWallets = Array.isArray(profile.wallets)
+    ? profile.wallets.filter((v) => typeof v === "string")
+    : [];
+
+  const seen = new Set(currentWallets.map((w) => w.toLowerCase()));
+  let wallets = [...currentWallets];
+  let added = false;
+
+  if (!seen.has(address.toLowerCase())) {
+    wallets.push(address);
+    added = true;
+  }
+
+  const nextProfile = { wallets };
+  fs.writeFileSync(profilePath, `${JSON.stringify(nextProfile, null, 2)}\n`, {
+    mode: 0o600,
+  });
+  try {
+    fs.chmodSync(profilePath, 0o600);
+  } catch (_) {
+    // best-effort hardening only
+  }
+
+  return { profilePath, added };
 }
 
 function getCanonicalWalletPath() {
@@ -204,10 +261,20 @@ function main() {
   printPathNoticeBeforeCreate(pathInfo);
   writeWalletFile(payload, pathInfo.outPath);
 
+  let profileSync = null;
+  try {
+    profileSync = syncPublicWalletProfile(payload.address);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`WARNING: profile sync failed: ${message}`);
+  }
+
   const outputPayload = {
     ...payload,
     walletFilePath: pathInfo.outPath,
     canonicalWalletFilePath: pathInfo.canonicalPath,
+    profilePath: profileSync ? profileSync.profilePath : resolveProfilePath(),
+    profileWalletAdded: profileSync ? profileSync.added : false,
     createdAdditionalWallet: pathInfo.createdAdditional,
     overwrittenCanonicalWallet: pathInfo.overwroteCanonical,
   };
@@ -217,6 +284,8 @@ function main() {
     address: payload.address,
     path: pathInfo.outPath,
     canonicalPath: pathInfo.canonicalPath,
+    profilePath: outputPayload.profilePath,
+    profileWalletAdded: outputPayload.profileWalletAdded,
     force,
     createdAdditionalWallet: pathInfo.createdAdditional,
     additionalIndex: pathInfo.additionalIndex,
@@ -232,6 +301,7 @@ function main() {
   if (mode === "managed") {
     console.log(`Wallet created: ${outputPayload.address}`);
     console.log(`Stored at: ${outputPayload.walletFilePath}`);
+    console.log(`Public profile: ${outputPayload.profilePath}`);
     console.log(
       "WARNING: Wallet file stores plaintext private key on disk. Use only on a secured local machine.",
     );
@@ -248,6 +318,7 @@ function main() {
   console.log(`export WALLET_ADDRESS="${outputPayload.address}"`);
   console.log(`export PRIVATE_KEY="${outputPayload.privateKey}"`);
   console.log(`export WALLET_FILE_PATH="${outputPayload.walletFilePath}"`);
+  console.log(`export CLAWDEFI_PROFILE_PATH="${outputPayload.profilePath}"`);
   appendAudit("wallet_created", auditDetails);
 }
 
