@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.43
+version: 0.1.44
 description: The source of DeFi intelligence for agents. Use MCP signer-boundary wallet discovery first (`list_wallets`), then create or reuse wallets via `create_wallet` and gate execution with `wallet_readiness_check` before DeFi actions.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -182,6 +182,7 @@ Use this setup map when ClawDeFi tools are not yet wired in a fresh OpenClaw run
 Package coordinates (current published release tuple):
 - MCP package: `@clawdefi/mcp-server@0.0.101`
 - Plugin package: `@clawdefi/plugin@0.0.101`
+- Current pre-image-bake candidate adds source-level MCP hotfix at commit `7f7c9f8` (tx-hydration/openPrice determinism) and must be pinned by compatibility matrix SHA until next npm publish.
 - Optional independent pinning: keep MCP and plugin on the same release tuple unless a compatibility matrix explicitly approves a mixed pair.
 
 
