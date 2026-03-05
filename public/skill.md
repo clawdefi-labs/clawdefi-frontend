@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.40
+version: 0.1.41
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -69,6 +69,10 @@ Preferred opening for new sessions (adapt name if known):
 ## 3) Signer Discovery and Initialization (Swappable Module)
 Use this section first whenever wallet execution is required.
 
+Primary path (preferred):
+- use plugin/MCP signer-boundary tools for wallet lifecycle and policy checks (`create_wallet`, `list_wallets`, `get_policy`, `update_policy`, `sign_intent`).
+- treat local scripts in this section as fallback/bootstrap utilities when MCP/plugin path is unavailable or explicitly requested.
+
 Required first-sight behavior (exact policy, no paraphrase):
 - first check canonical path: `~/.openclaw/wallets/clawdefi-wallet.json`
 - do not ask a generic "do you already have a wallet" question before this check.
@@ -78,7 +82,7 @@ Decision flow:
 - default to reuse existing signer,
 - ask only: `Existing wallet detected at ~/.openclaw/wallets/clawdefi-wallet.json. Reuse it (recommended) or create an additional wallet?`
 - if user chooses reuse, continue with readiness validation,
-- if user chooses additional, run `create-wallet.js --env` (without `--force`) so deterministic `-2/-3/...` pathing is preserved,
+- if user chooses additional, prefer `create_wallet` via plugin/MCP; if MCP/plugin path is unavailable, run `create-wallet.js --env` fallback (without `--force`) so deterministic `-2/-3/...` pathing is preserved,
 - only use `--force` when user explicitly asks to overwrite canonical file.
 2. If canonical wallet does not exist:
 - initialize with this exact wallet option list in this exact order:
@@ -89,8 +93,9 @@ Decision flow:
 - ask: `Do you want quick setup or full technical details?`
 - do not dump full requirements/credential-source/checklist/security text in the first response,
 - only provide full requirements/credential-source/checklist details from this section when the user explicitly asks for full details,
-- run setup through swappable module interface,
-- validate module readiness locally after initialization.
+- run setup through swappable module interface (plugin/MCP first),
+- use local script bootstrap only as fallback when MCP/plugin is not yet available,
+- validate module readiness after initialization (MCP checks preferred).
 
 Credential custody and prompt policy:
 - State custody policy once, in one short sentence, right before running wallet setup commands.
@@ -121,7 +126,7 @@ Cons:
 
 Requirements:
 - Node.js 18+ runtime in the skill environment (global `fetch` required by bundled scripts),
-- dependency: `npm install ethers`,
+- dependency (script fallback path only): `npm install ethers`,
 - bundled scripts: `scripts/create-wallet.js`, `scripts/wallet-readiness-check.js`, `scripts/token-balance-check.js`, `scripts/allowance-manager.js`, `scripts/simulate-transaction.js`, `scripts/swap-1inch.js`, `scripts/query-protocol.js`, `scripts/query-coingecko.js`, `scripts/query-avantis.js`, `scripts/query-pyth.js`, and `scripts/query-contract-verification.js`,
 - local secure env or secret-storage path for signer variables,
 - canonical wallet file path policy: `~/.openclaw/wallets/clawdefi-wallet.json`,
@@ -132,15 +137,17 @@ Credential source:
 - signer credentials are generated locally via bundled script on this machine.
 
 Setup:
-- Install dependency once in the skill runtime environment:
-  - `npm install ethers`
-- Create wallet in env-output mode using bundled script:
-  - `node scripts/create-wallet.js --env`
+- Preferred (plugin/MCP path):
+  - create or register wallet through `create_wallet` (signer-boundary),
+  - persist signer references only (`walletHandle`, `WALLET_ADDRESS`, optional `WALLET_FILE_PATH`) in secure local env storage,
+  - perform policy checks through `get_policy` / `update_policy` as needed.
+- Fallback (script bootstrap path when MCP/plugin unavailable):
+  - install dependency once in the skill runtime environment: `npm install ethers`,
+  - create wallet in env-output mode using bundled script: `node scripts/create-wallet.js --env`.
 - Wallet path policy (must follow exactly):
   - canonical path: `~/.openclaw/wallets/clawdefi-wallet.json`,
   - if canonical file already exists and `--force` is not used, script creates `~/.openclaw/wallets/clawdefi-wallet-2.json`, then `-3`, and so on,
   - only `--force` may overwrite the canonical file and must be explicitly user-approved before execution.
-- Persist signer references only (`walletHandle`, `WALLET_ADDRESS`, optional `WALLET_FILE_PATH`) in secure local environment storage.
 - Do not persist, print, or pass raw private key material in skill workflow steps.
 - Build/sign operations must execute through MCP signer-runtime tools (not local raw-key signing).
 
@@ -188,6 +195,36 @@ Package placeholders (replace with final package/release coordinates when publis
 - Plugin package: `<clawdefi-plugin-package-placeholder>`
 - Optional pinned versions: `<mcp-version-placeholder>`, `<plugin-version-placeholder>`
 
+
+Concrete config skeleton (placeholders; plugin config shape is exact):
+- MCP environment template (minimum):
+  ```bash
+  export MCP_AUTH_TOKEN='<mcp-auth-token-placeholder>'
+  export INTERNAL_SERVICE_TOKEN='<internal-service-token-placeholder>'
+  export CORE_API_BASE_URL='<core-api-base-url-placeholder>'
+  export SIGNER_RUNTIME_MODE='<embedded-or-remote-placeholder>'
+  export SIGNER_RUNTIME_AUTH_TOKEN='<signer-runtime-auth-token-placeholder>'
+  export EMBEDDED_SIGNER_SEED='<embedded-signer-seed-placeholder>'
+  # when remote signer-runtime is used:
+  export SIGNER_RUNTIME_BASE_URL='<signer-runtime-base-url-placeholder>'
+  ```
+- Plugin runtime config template (for ClawDeFi plugin):
+  ```json
+  {
+    "mcpBaseUrl": "<mcp-base-url-placeholder>",
+    "mcpTokenEnvVar": "MCP_AUTH_TOKEN",
+    "timeoutMs": 10000,
+    "toolPrefix": true,
+    "prefix": "cdf_",
+    "requirePrincipal": true
+  }
+  ```
+- OpenClaw service command checks:
+  - `openclaw status`
+  - `openclaw gateway status`
+  - `openclaw gateway start` (if stopped)
+  - `openclaw gateway restart` (after config/env changes)
+
 Process map (authoritative sequence):
 1. **MCP service bootstrap**
 - install/start ClawDeFi MCP runtime package,
@@ -230,7 +267,7 @@ Failure policy:
 - if canonical exists, do not ask generic wallet-existence questions; ask only:
   - `Existing wallet detected at ~/.openclaw/wallets/clawdefi-wallet.json. Reuse it (recommended) or create an additional wallet?`
 - if user selects reuse, link existing signer.
-- if user selects additional wallet, run creation without `--force` so deterministic `-2/-3/...` naming is preserved.
+- if user selects additional wallet, prefer `create_wallet` via plugin/MCP; use script fallback without `--force` so deterministic `-2/-3/...` naming is preserved.
 - if canonical does not exist, acknowledge briefly, present wallet options in exact order with concise summary first, explicitly state that more wallet options will be available in future ClawDeFi releases, ask whether user wants quick setup vs full technical details, then run selected setup (`local-siwe-wallet`).
 - in this first decision prompt, avoid long command/security blocks; provide those only after explicit request for full technical detail.
 - never overwrite `~/.openclaw/wallets/clawdefi-wallet.json` unless user explicitly requests overwrite and command includes `--force`.
