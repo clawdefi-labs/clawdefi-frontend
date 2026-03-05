@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.39
+version: 0.1.40
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -21,7 +21,7 @@ Authority boundary:
 - OpenClaw (or any LLM agent) orchestrates user requests.
 - ClawDeFi Core (`clawdefi-core`) is the source of truth for contracts, actions, risk policy, and execution constraints.
 
-## 1.5) Conversation UX and Tone (Mandatory)
+## 2) Conversation UX and Tone (Mandatory)
 - Sound human, calm, and action-oriented (not robotic).
 - Keep default replies short (2–6 lines) unless user asks for depth.
 - Ask one clear next-step question instead of dumping full spec text.
@@ -66,7 +66,7 @@ Preferred opening for new sessions (adapt name if known):
 - short capability list (research, swap, perps, readiness checks, simulation)
 - `Ready when you are.`
 
-## 2) Signer Discovery and Initialization (Swappable Module)
+## 3) Signer Discovery and Initialization (Swappable Module)
 Use this section first whenever wallet execution is required.
 
 Required first-sight behavior (exact policy, no paraphrase):
@@ -180,7 +180,7 @@ Execution policy:
 - Require deterministic risk approval before transaction build/sign flow.
 - Never send signer secrets or private keys to `clawdefi-core`.
 
-## 2.5) OpenClaw Runtime Onboarding (Plugin + MCP) (Mandatory before production)
+## 4) OpenClaw Runtime Onboarding (Plugin + MCP) (Mandatory before production)
 Use this setup map when ClawDeFi tools are not yet wired in a fresh OpenClaw runtime.
 
 Package placeholders (replace with final package/release coordinates when published):
@@ -223,8 +223,8 @@ Operational verification checklist (minimum):
 Failure policy:
 - if any onboarding checkpoint fails, mark system `not_ready` and do not proceed to execution guidance.
 
-## 3) Mandatory Runtime Workflow
-0. Confirm OpenClaw runtime onboarding is complete (`plugin + MCP + signer-boundary`); if not, execute section 2.5 first and block execution paths until ready.
+## 5) Mandatory Runtime Workflow
+0. Confirm OpenClaw runtime onboarding is complete (`plugin + MCP + signer-boundary`); if not, execute section 4 first and block execution paths until ready.
 1. Run signer discovery gate:
 - first check whether `~/.openclaw/wallets/clawdefi-wallet.json` exists.
 - if canonical exists, do not ask generic wallet-existence questions; ask only:
@@ -272,7 +272,7 @@ Failure policy:
 21. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
 22. Require explicit user confirmation before transaction signing.
 
-## 4) Required Disclaimer Text
+## 6) Required Disclaimer Text
 Show this exact text before any strategy or transaction guidance:
 
 > ClawDeFi provides analytics and agentic workflows, not financial advice.  
@@ -284,7 +284,7 @@ Rules:
 - Do not proceed unless the user explicitly accepts.
 - Log acceptance timestamp and disclaimer version for auditability.
 
-## 5) Safety Policies
+## 7) Safety Policies
 - Never bypass ClawDeFi risk engine results.
 - Never suggest unsupported protocols or unknown contract addresses.
 - Never invent ABIs, function signatures, or endpoints.
@@ -295,14 +295,14 @@ Rules:
 - Never invoke `wallet-readiness-check` with bare `--json` unless `RPC_URL`, `CHAIN_ID`, and wallet selector context (`walletHandle` or `WALLET_ADDRESS`) are already set.
 - Always provide unwind path for leveraged or time-sensitive positions.
 
-## 6) Update Policy
+## 8) Update Policy
 - Check ClawDeFi skill manifest every 6 hours.
 - Prefer checksum-verified update paths from trusted ClawDeFi distribution channels.
 - `update-from-manifest.sh` is the canonical checksum-verified path for installed skill updates.
 - Manual raw fetch one-liners are fallback-only and may skip per-file checksum guarantees.
 - Maintain rollback pointer to last known-good skill version.
 
-## 7) Distribution Channels
+## 9) Distribution Channels
 Support both installation channels:
 
 1. ClawHub channel:
@@ -327,7 +327,7 @@ Notes:
   - `sha256sum` or `shasum` required for local checksum verification.
 - `references/` is local-only and is intentionally not installed by raw installer scripts.
 
-## 8) Action Modules (Grouped)
+## 10) Action Modules (Grouped)
 
 ### Category Model (Plugin-aligned, authoritative)
 Use plugin category taxonomy when reasoning about policy and signing scope:
