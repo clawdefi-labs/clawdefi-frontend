@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.37
+version: 0.1.38
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -205,9 +205,10 @@ Execution policy:
 6. Run Avantis preflight through plugin/MCP perps reads before perp monitoring or trade execution:
   - required: `perps_fetch_market_state` with `protocolSlug=avantis`,
   - optional legacy fallback (if explicitly enabled): `query-avantis` script.
-7. Run `query_pyth` (plugin/MCP, `market_intel`) for execution-grade oracle context when monitoring perps or oracle-sensitive actions.
-  - supported MCP modes: `latest`, `stream` (`stream` is metadata-only endpoint guidance in MCP; no live event fan-out).
-  - if live event capture is required, use script fallback (`query-pyth`) or a dedicated stream worker.
+7. Run `query_pyth` (plugin/MCP, `market_intel`) for oracle context and endpoint metadata.
+  - supported MCP modes: `latest`, `stream` (`stream` in this tool is endpoint metadata).
+  - for managed live updates, use `query_pyth_stream_open` -> `query_pyth_stream_poll` -> `query_pyth_stream_close` (MCP-managed session worker with TTL/heartbeat/reconnect).
+  - use script fallback (`query-pyth`) only when MCP stream-session path is unavailable for your environment.
 8. Run `query_coingecko` (plugin/MCP, `market_intel`) for advisory market context.
   - supported MCP modes: `simple_price`, `search`.
   - for extended CoinGecko endpoints (`token-price`, `coin`), use script fallback (`query-coingecko`).
@@ -289,7 +290,7 @@ Use plugin category taxonomy when reasoning about policy and signing scope:
 - `wallet_management`: wallet lifecycle, policy, signer-boundary signing, wallet transfers.
 - `swap`: swap quote/build/execute flows.
 - `perps`: perp reads/build/simulate/execute flows.
-- `market_intel`: read-only oracle/market intel (`query_pyth`, `query_coingecko`).
+- `market_intel`: read-only oracle/market intel (`query_pyth`, `query_coingecko`, `query_pyth_stream_*`).
 - `prediction`, `lending`, `yield`, `options`, `policy`: reserved/expanding modules.
 
 Routing rule:
@@ -771,14 +772,19 @@ Unwind/fallback:
 - Priority: P0.
 - Status: active in MVP (plugin/MCP-first in `market_intel`, script fallback).
 - Module ID: `query-pyth`.
-- Purpose: query Pyth oracle data and endpoint metadata for low-latency monitoring paths.
+- Purpose: query Pyth oracle data and manage live update sessions for monitoring paths.
 - Implementation path:
-  - primary: `plugin -> MCP /tools/query_pyth`,
+  - primary metadata/read: `plugin -> MCP /tools/query_pyth`,
+  - primary managed live sessions: `plugin -> MCP /tools/query_pyth_stream_open|poll|close`,
   - fallback: `scripts/query-pyth.js`.
 - Supported MCP modes (current):
-  - `latest` -> Hermes REST `GET /v2/updates/price/latest?ids[]=...`,
-  - `stream` -> metadata-only endpoint guidance (`transport: sse|pro-wss`), not live event streaming.
-- Script fallback modes (for active stream/event capture):
+  - `query_pyth latest` -> Hermes REST `GET /v2/updates/price/latest?ids[]=...`,
+  - `query_pyth stream` -> metadata-only endpoint guidance (`transport: sse|pro-wss`).
+- Supported MCP stream-session tools (current):
+  - `query_pyth_stream_open` -> opens managed live-update session (TTL/heartbeat/reconnect),
+  - `query_pyth_stream_poll` -> cursor-based incremental events,
+  - `query_pyth_stream_close` -> closes session explicitly.
+- Script fallback modes:
   - `stream` -> Hermes SSE event capture (`max-events` bounded),
   - `pro-wss` -> Pyth Pro endpoint guidance/auth contract.
 - Required inputs:
@@ -800,7 +806,7 @@ Unwind/fallback:
 - Safety rule:
   - for Avantis/perp monitoring, treat Pyth/Avantis-native values as authoritative over CoinGecko.
 - Fallback:
-  - if MCP stream metadata is insufficient for use-case, run explicit script fallback or a dedicated stream worker and mark source/latency assumptions.
+  - if MCP stream-session tools are unavailable in the target environment, run explicit script fallback and mark source/latency assumptions.
 
 ### query-contract-verification
 - Priority: P0.
