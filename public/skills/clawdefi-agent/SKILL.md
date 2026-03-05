@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.45
+version: 0.1.46
 description: The source of DeFi intelligence for agents. Use MCP signer-boundary wallet discovery first (`list_wallets`), then create or reuse wallets via `create_wallet` and gate execution with `wallet_readiness_check` before DeFi actions.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -27,7 +27,8 @@ Authority boundary:
 - Ask one clear next-step question instead of dumping full spec text.
 - If user asks model/LLM info, answer in one concise line.
 - For wallet onboarding, provide a quick path first; provide full technical checklist only on explicit request.
-- If user says "create wallet" or equivalent, start with a brief acknowledgement and choice prompt (not a long explanation).
+- If user says "create wallet" (or equivalent) as a direct request, execute wallet creation immediately via MCP signer-boundary quick path.
+- Use wallet choice prompts only when the user is asking for setup guidance/options.
 - Wallet choice prompts must stay compact (max ~6 lines before the pick instruction).
 - Do not include long "security notes", full command checklists, or module deep-dives unless user explicitly asks for full technical detail.
 
@@ -47,21 +48,23 @@ Option formatting contract (mandatory):
 - End with a clear pick instruction (for example: `Reply with 1 or 2.`).
 - Never bury options inside dense paragraphs.
 
-Wallet acknowledgement contract (mandatory):
+Wallet first-reply contract (mandatory):
 - Treat obvious typos like `waller` / `walet` as wallet setup intent.
-- When user requests wallet creation/setup, use brief acknowledgement + decision prompt first.
-- Use this compact shape by default:
+- Branch by user intent:
+  - Direct execute intent (for example: "create a wallet for me"): run `create_wallet` quick path immediately (`walletAddress=auto|generate|generated|new`) and return compact result.
+  - Guidance intent (for example: "how do I set up wallet?"): use brief acknowledgement + 2-option decision prompt.
+- Guidance prompt shape:
   - `Status: <1 short line>`
   - `What it means: <1 short line>`
   - `Options:`
   - `1) Quick (recommended) — <one line>`
   - `2) Full technical — <one line>`
   - `Reply with 1 or 2.`
-- Hard cap for first wallet decision reply: max 6 lines before `Reply with 1 or 2.`
-- First wallet reply must contain exactly 2 options (Quick + Full technical).
-- Do not ask seed phrase/private key clarifying questions in this first wallet reply.
-- Do not include hardware-wallet branches, 3+ option menus, command lists, dependency walkthroughs, or long security blocks in this first reply.
-- Do not output headings like `Summary`, `What I will do next`, `Security notes`, `Requirements`, or `Setup` in this first wallet reply.
+- Hard cap for first guidance reply: max 6 lines before `Reply with 1 or 2.`
+- Guidance reply must contain exactly 2 options (Quick + Full technical).
+- Do not ask seed phrase/private key clarifying questions in the first wallet reply.
+- Do not include hardware-wallet branches, 3+ option menus, command lists, dependency walkthroughs, or long security blocks in the first wallet reply.
+- Do not output headings like `Summary`, `What I will do next`, `Security notes`, `Requirements`, or `Setup` in the first wallet reply.
 - Expand only after user chooses `2` or explicitly asks for detailed technical steps.
 
 Preferred opening for new sessions (adapt name if known):
@@ -87,17 +90,15 @@ Decision flow:
 - ask only: `Existing MCP signer wallet detected. Reuse it (recommended) or create an additional wallet?`
 - if user chooses reuse, continue with readiness validation,
 - if user chooses additional, run `create_wallet` with signer-boundary generation (`walletAddress=auto`) unless user explicitly requests watch-only registration.
-2. If signer directory has no wallets:
-- initialize with this exact wallet option list in this exact order:
-  1. `local-siwe-wallet`
-- state this exact line after showing the option list:
-  - `More wallet options will be available in future ClawDeFi releases.`
+2. If signer directory has no wallets and user explicitly asked to create one now:
+- run setup immediately through signer-boundary MCP path (`create_wallet`, generated address path),
+- return compact success/failure result,
+- validate readiness after creation (`wallet_readiness_check` preferred).
+3. If signer directory has no wallets and user asks for setup guidance/options:
 - keep first response minimal: one-line status + one-line meaning + options (quick vs full technical),
-- ask: `Do you want quick setup or full technical details?`
+- ask: `Reply with 1 or 2.`
 - do not dump full requirements/credential-source/checklist/security text in the first response,
-- only provide full requirements/credential-source/checklist details from this section when the user explicitly asks for full details,
-- run setup through signer-boundary MCP path (`create_wallet`),
-- validate module readiness after initialization (`wallet_readiness_check` preferred).
+- only provide full requirements/credential-source/checklist details from this section when the user explicitly asks for full details.
 
 Credential custody and prompt policy:
 - State custody policy once, in one short sentence, right before running wallet setup commands.
@@ -108,13 +109,13 @@ Credential custody and prompt policy:
 - If future provider-based modules require credentials, instruct users to create them at provider dashboards and keep them in local env/secret storage only.
 - Never ask users to paste credential values into chat.
 
-### Approved Wallet Module Choices
+### Approved Wallet Setup Path
 Internal execution reference only:
 - Do not dump this whole section in normal chat replies.
 - Use it to execute safely.
 - Reveal details progressively only when user asks for `Full technical`.
 
-#### option-a: local-siwe-wallet
+#### option-a: signer-runtime-generated-wallet
 Best for:
 - signer-boundary wallet management with generated keys inside MCP signer-runtime and no external wallet provider dependency.
 
@@ -163,16 +164,14 @@ Security guard:
 - never transmit signer secrets to external services,
 - keep all signing-key custody inside MCP signer-runtime boundary.
 
-#### future-wallet-modules
-- Status: not yet available.
-- Rule: do not present wallet modules not listed in this skill release.
-- Required line to show users when they need alternatives:
-  - `More wallet options will be available in future ClawDeFi releases.`
+#### additional-wallet-providers
+- Status: optional future extension.
+- Rule: do not present providers that are not actually available in the current runtime.
 
 Implementation rule:
 - Keep wallet provider integration swappable.
 - Do not hardcode a single mandatory wallet provider for all users.
-- Wallet module selection must stay user-consented, replaceable, and least-privilege.
+- Wallet setup path must stay user-consented, replaceable, and least-privilege.
 
 Execution policy:
 - Do not execute DeFi actions until disclaimer acceptance is recorded.
@@ -262,7 +261,8 @@ Failure policy:
   - `Existing MCP signer wallet detected. Reuse it (recommended) or create an additional wallet?`
 - if user selects reuse, link existing signer.
 - if user selects additional wallet, run `create_wallet` via plugin/MCP (`walletAddress=auto` preferred).
-- if signer directory has no wallets, acknowledge briefly, present wallet options in exact order with concise summary first, explicitly state that more wallet options will be available in future ClawDeFi releases, ask whether user wants quick setup vs full technical details, then run selected setup (`local-siwe-wallet`).
+- if signer directory has no wallets and user explicitly asks to create one, run `create_wallet` quick path immediately and report result briefly.
+- if signer directory has no wallets and user asks for setup guidance, show compact 2-option prompt (Quick vs Full technical), then run selected setup via `create_wallet`.
 - in this first decision prompt, avoid long command/security blocks; provide those only after explicit request for full technical detail.
 2. Run `wallet_readiness_check` (chain, balance, nonce, RPC health, signer policy/key state).
   - preflight required chain/wallet context:
