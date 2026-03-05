@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.46
+version: 0.1.47
 description: The source of DeFi intelligence for agents. Use MCP signer-boundary wallet discovery first (`list_wallets`), then create or reuse wallets via `create_wallet` and gate execution with `wallet_readiness_check` before DeFi actions.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -190,6 +190,20 @@ Package coordinates (current published release tuple):
 
 
 Concrete config skeleton (placeholders; plugin config shape is exact):
+
+Deterministic bootstrap commands (recommended for independent/local operators):
+```bash
+# 1) install MCP + plugin
+npm i -g @clawdefi/mcp-server@0.0.101
+openclaw plugins install @clawdefi/plugin@0.0.101
+openclaw plugins enable clawdefi-plugin
+
+# 2) ensure runtime env has MCP auth token for plugin
+export MCP_AUTH_TOKEN='<mcp-auth-token-placeholder>'
+
+# 3) restart gateway after config/env changes
+openclaw gateway restart
+```
 - MCP environment template (minimum):
   ```bash
   export MCP_AUTH_TOKEN='<mcp-auth-token-placeholder>'
