@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.38
+version: 0.1.39
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -180,7 +180,51 @@ Execution policy:
 - Require deterministic risk approval before transaction build/sign flow.
 - Never send signer secrets or private keys to `clawdefi-core`.
 
+## 2.5) OpenClaw Runtime Onboarding (Plugin + MCP) (Mandatory before production)
+Use this setup map when ClawDeFi tools are not yet wired in a fresh OpenClaw runtime.
+
+Package placeholders (replace with final package/release coordinates when published):
+- MCP package: `<clawdefi-mcp-package-placeholder>`
+- Plugin package: `<clawdefi-plugin-package-placeholder>`
+- Optional pinned versions: `<mcp-version-placeholder>`, `<plugin-version-placeholder>`
+
+Process map (authoritative sequence):
+1. **MCP service bootstrap**
+- install/start ClawDeFi MCP runtime package,
+- set required env (`MCP_AUTH_TOKEN`, `INTERNAL_SERVICE_TOKEN`, signer-runtime auth/seed, core URLs),
+- verify MCP `healthz` and `readyz` endpoints return healthy/ready.
+
+2. **Plugin bootstrap in OpenClaw**
+- install/enable ClawDeFi plugin package,
+- configure plugin -> MCP connection (`mcpBaseUrl`, token source, timeout, optional tool prefix),
+- ensure plugin tools register and are discoverable by the agent.
+
+3. **Signer-boundary bootstrap**
+- confirm signer-runtime path (embedded or remote) is reachable,
+- verify `create_wallet` / `list_wallets` / `get_policy` calls succeed,
+- enforce policy defaults before execution paths are exposed.
+
+4. **Category + route sanity check**
+- validate `wallet_management`, `perps`, and `market_intel` tools are callable,
+- smoke-test `query_coingecko`, `query_pyth`, and `query_pyth_stream_open|poll|close`,
+- smoke-test `wallet_build_transfer` -> `wallet_execute_transfer` in dry-run/safe environment.
+
+5. **Production readiness gate**
+- run preflight checks and confirm fail-closed behavior on missing/invalid prerequisites,
+- only then allow user-facing execution workflows.
+
+Operational verification checklist (minimum):
+- OpenClaw runtime is up (`openclaw status`)
+- MCP is reachable (`/healthz`, `/readyz`)
+- plugin can call MCP with valid auth
+- signer boundary is enforced (no raw key flow in plugin path)
+- perps + market_intel + transfer routes return contract envelopes
+
+Failure policy:
+- if any onboarding checkpoint fails, mark system `not_ready` and do not proceed to execution guidance.
+
 ## 3) Mandatory Runtime Workflow
+0. Confirm OpenClaw runtime onboarding is complete (`plugin + MCP + signer-boundary`); if not, execute section 2.5 first and block execution paths until ready.
 1. Run signer discovery gate:
 - first check whether `~/.openclaw/wallets/clawdefi-wallet.json` exists.
 - if canonical exists, do not ask generic wallet-existence questions; ask only:
