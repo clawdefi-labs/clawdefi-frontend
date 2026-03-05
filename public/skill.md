@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.36
+version: 0.1.37
 description: The source of DeFi intelligence for agents. On first run, check the canonical local wallet path (`~/.openclaw/wallets/clawdefi-wallet.json`). If present, default to reusing it and ask only whether to create an additional wallet. If absent, initialize the approved local SIWE wallet module, explicitly state more wallet options will be available in future releases, validate readiness, then proceed with permissionless DeFi guidance.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -140,29 +140,28 @@ Setup:
   - canonical path: `~/.openclaw/wallets/clawdefi-wallet.json`,
   - if canonical file already exists and `--force` is not used, script creates `~/.openclaw/wallets/clawdefi-wallet-2.json`, then `-3`, and so on,
   - only `--force` may overwrite the canonical file and must be explicitly user-approved before execution.
-- Persist `WALLET_ADDRESS` and `PRIVATE_KEY` in secure local environment storage.
-- persist `WALLET_FILE_PATH` from script output when present so runtime can rehydrate the same signer deterministically.
-- Build SIWE message (domain/URI, address, chain ID, nonce, issued-at timestamp) and sign with local key.
+- Persist signer references only (`walletHandle`, `WALLET_ADDRESS`, optional `WALLET_FILE_PATH`) in secure local environment storage.
+- Do not persist, print, or pass raw private key material in skill workflow steps.
+- Build/sign operations must execute through MCP signer-runtime tools (not local raw-key signing).
 
 Readiness checks:
-- preflight required local signer inputs before readiness call:
+- preflight required execution context before readiness call:
   - `export RPC_URL='https://mainnet.base.org'`
   - `export CHAIN_ID='8453'`
-  - `export PRIVATE_KEY='0x...'`
-  - optional: `export WALLET_ADDRESS='0x...'`
-- hard rule: do not run bare `node scripts/wallet-readiness-check.js --json` when required inputs are unset.
-- run bundled readiness module with either:
-  - env-backed call: `node scripts/wallet-readiness-check.js --json`
-  - explicit flags: `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --wallet-address <0x...> --json`
-- perform local signature roundtrip (sign + recover) and match expected address,
+  - wallet selector present: `walletHandle` (preferred) or `WALLET_ADDRESS`
+- hard rule: do not run readiness with missing chain context or missing wallet selector.
+- run readiness + signer-state validation through MCP-bound flow:
+  - ensure wallet exists via `list_wallets`
+  - verify policy/limits via `get_policy`
+  - run chain health/balance checks without introducing raw key inputs
 - selected-chain RPC balance query succeeds,
 - nonce query succeeds on selected chain,
 - simulation check is a separate mandatory step via `simulate-transaction` before sign flow.
 
 Security guard:
-- never print private key or seed in logs (the `--env` mode prints it to stdout intentionally; treat stdout as secret and do not run in CI or log-captured environments),
-- never transmit signer secrets to external services.
-- `create-wallet.js` writes plaintext private key JSON at rest under `~/.openclaw/wallets`; use only on secured user-controlled machines and enforce filesystem permissions.
+- never print private key or seed in logs,
+- never transmit signer secrets to external services,
+- keep all signing-key custody inside MCP signer-runtime boundary.
 
 #### future-wallet-modules
 - Status: not yet available.
@@ -191,21 +190,27 @@ Execution policy:
 - if canonical does not exist, acknowledge briefly, present wallet options in exact order with concise summary first, explicitly state that more wallet options will be available in future ClawDeFi releases, ask whether user wants quick setup vs full technical details, then run selected setup (`local-siwe-wallet`).
 - in this first decision prompt, avoid long command/security blocks; provide those only after explicit request for full technical detail.
 - never overwrite `~/.openclaw/wallets/clawdefi-wallet.json` unless user explicitly requests overwrite and command includes `--force`.
-2. Run `wallet-readiness-check` (chain, balance, nonce, RPC health, signature roundtrip).
-  - preflight required keys/chain context:
-    - ensure local runtime has `RPC_URL`, `CHAIN_ID`, and `PRIVATE_KEY` (or equivalent CLI flags),
-    - if missing, ask user for chain/RPC and request local env setup confirmation; do not run readiness yet,
+2. Run `wallet-readiness-check` (chain, balance, nonce, RPC health, signer policy state).
+  - preflight required chain/wallet context:
+    - ensure local runtime has `RPC_URL`, `CHAIN_ID`, and wallet selector (`walletHandle` preferred, or wallet address),
+    - if missing, ask user for chain/RPC or wallet selection; do not run readiness yet,
     - never request private key value in chat.
-  - recommended commands:
-    - env-backed call: `node scripts/wallet-readiness-check.js --json`
-    - explicit flags: `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --wallet-address <0x...> --json`
+  - recommended execution path:
+    - validate signer context via MCP `list_wallets` + `get_policy`,
+    - run chain/readiness checks without passing raw key material.
 3. Run `wallet-token-balance-check` for native gas and target token balance sanity.
   - recommended command: `node scripts/token-balance-check.js --chain-id <id> --wallet-address <wallet> --token-address NATIVE --json`
 4. Run `query-chain-registry` for canonical chain/RPC/explorer context.
 5. Run `query-protocol` for protocol overview and supported chain/action context from `clawdefi-core`.
-6. Run `query-avantis` to preflight Avantis socket/core/feed endpoints before perp monitoring or trade execution.
-7. Run `query-pyth` for execution-grade oracle context (Hermes API/SSE, and Pyth Pro WSS endpoint guidance) when monitoring perps or oracle-sensitive actions.
-8. Run `query-coingecko` for market context (price, 24h movement, market-cap/volume) as advisory data only.
+6. Run Avantis preflight through plugin/MCP perps reads before perp monitoring or trade execution:
+  - required: `perps_fetch_market_state` with `protocolSlug=avantis`,
+  - optional legacy fallback (if explicitly enabled): `query-avantis` script.
+7. Run `query_pyth` (plugin/MCP, `market_intel`) for execution-grade oracle context when monitoring perps or oracle-sensitive actions.
+  - supported MCP modes: `latest`, `stream` (`stream` is metadata-only endpoint guidance in MCP; no live event fan-out).
+  - if live event capture is required, use script fallback (`query-pyth`) or a dedicated stream worker.
+8. Run `query_coingecko` (plugin/MCP, `market_intel`) for advisory market context.
+  - supported MCP modes: `simple_price`, `search`.
+  - for extended CoinGecko endpoints (`token-price`, `coin`), use script fallback (`query-coingecko`).
 9. Collect/confirm user risk profile: `beginner`, `advanced`, or `expert`.
 10. Require explicit disclaimer acceptance.
 11. Run `query-action-spec` to fetch canonical action contract from `clawdefi-core`.
@@ -214,12 +219,13 @@ Execution policy:
 14. Run `simulate-transaction` before any sign request.
   - recommended command: `node scripts/simulate-transaction.js --to <target> --data <calldata> --json`
 15. When action requires ERC20 approvals, run `wallet-allowance-manager` before tx build/sign.
-16. For swap actions, run `swap` (1inch-first routing) and keep `simulate-transaction` as a hard pre-sign gate.
-17. For perp actions, run `trade-perp` with local Python Avantis SDK flow (no MCP required in MVP), and handle TP/SL explicitly (execute+verify or return `tp_sl_not_configured`).
-18. Run `build-unwind-plan` and show fallback path before execution confirmation.
-19. Run `subscribe-alerts` (poll-mode MVP), then use `poll-alert-events` and `close-alert-subscription` as needed.
-20. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
-21. Require explicit user confirmation before transaction signing.
+16. For wallet fund movements (native/ERC20), use `wallet_build_transfer` -> `wallet_execute_transfer` (plugin/MCP) with signing strictly inside MCP signer-runtime boundary.
+17. For swap actions, run `swap` (1inch-first routing) and keep `simulate-transaction` as a hard pre-sign gate.
+18. For perp actions, use protocol-generic MCP perps tools (`perps_fetch_*`, `perps_build_*`, `perps_simulate_intent`, `perps_execute_intent`) with explicit `protocolSlug` selection; keep signing strictly inside MCP signer-runtime boundary.
+19. Run `build-unwind-plan` and show fallback path before execution confirmation.
+20. Run `subscribe-alerts` (poll-mode MVP), then use `poll-alert-events` and `close-alert-subscription` as needed.
+21. Present recommendation with expected yield band, key risks, safety warnings, and exact interaction path.
+22. Require explicit user confirmation before transaction signing.
 
 ## 4) Required Disclaimer Text
 Show this exact text before any strategy or transaction guidance:
@@ -241,7 +247,7 @@ Rules:
 - Never ask users to paste API secrets or wallet credentials into chat.
 - Never transmit signer secrets to `clawdefi-core`.
 - Never install dependencies silently; announce install intent and wait for user confirmation first.
-- Never invoke `wallet-readiness-check` with bare `--json` unless `RPC_URL`, `CHAIN_ID`, and `PRIVATE_KEY` are already set in local env (or passed as explicit flags).
+- Never invoke `wallet-readiness-check` with bare `--json` unless `RPC_URL`, `CHAIN_ID`, and wallet selector context (`walletHandle` or `WALLET_ADDRESS`) are already set.
 - Always provide unwind path for leveraged or time-sensitive positions.
 
 ## 6) Update Policy
@@ -278,6 +284,18 @@ Notes:
 
 ## 8) Action Modules (Grouped)
 
+### Category Model (Plugin-aligned, authoritative)
+Use plugin category taxonomy when reasoning about policy and signing scope:
+- `wallet_management`: wallet lifecycle, policy, signer-boundary signing, wallet transfers.
+- `swap`: swap quote/build/execute flows.
+- `perps`: perp reads/build/simulate/execute flows.
+- `market_intel`: read-only oracle/market intel (`query_pyth`, `query_coingecko`).
+- `prediction`, `lending`, `yield`, `options`, `policy`: reserved/expanding modules.
+
+Routing rule:
+- prefer plugin/MCP tools first,
+- use local script modules as explicit fallback when MCP wrapper capability is intentionally narrower.
+
 ### wallet-create-new-wallet
 - Priority: P0.
 - Status: active.
@@ -287,7 +305,7 @@ Notes:
 - Standard run command:
   - `node scripts/create-wallet.js --env`
 - Output contract:
-  - generated signer context (`WALLET_ADDRESS`, `PRIVATE_KEY`, optional `WALLET_FILE_PATH`),
+  - generated signer context (`walletHandle`, `WALLET_ADDRESS`, optional `WALLET_FILE_PATH`),
   - deterministic path behavior (`clawdefi-wallet.json`, then `-2/-3/...` without `--force`).
 - Execution policy:
   - check canonical wallet file first,
@@ -384,7 +402,7 @@ Notes:
   - `RPC_URL` (or `CHAIN_RPC_URL` / `ETH_RPC_URL`) or `--rpc-url`,
   - `CHAIN_ID` or `--chain-id`,
   - `TX_TO` or `--to`,
-  - optional sender context via `WALLET_ADDRESS` / `--from-address` or `PRIVATE_KEY` / `--private-key`,
+  - optional sender context via `walletHandle` or `WALLET_ADDRESS` / `--from-address`,
   - optional `TX_DATA` / `--data` (default `0x`),
   - optional `TX_VALUE_WEI` / `--value-wei`,
   - optional slippage policy fields `QUOTED_OUT_WEI`, `MIN_OUT_WEI`, `MAX_SLIPPAGE_BPS`.
@@ -410,14 +428,13 @@ Notes:
 - Required inputs:
   - `RPC_URL` (or `CHAIN_RPC_URL` / `ETH_RPC_URL`) or `--rpc-url`,
   - `CHAIN_ID` or `--chain-id`,
-  - `PRIVATE_KEY` or `--private-key`,
-  - optional `WALLET_ADDRESS` or `--wallet-address` (must match derived signer),
+  - wallet selector: `walletHandle` (preferred) or `WALLET_ADDRESS` / `--wallet-address`,
   - optional `MIN_NATIVE_BALANCE_WEI` / `--min-native-balance-wei`.
 - Standard run command:
   - env-backed call:
     - `node scripts/wallet-readiness-check.js --json`
   - explicit flags:
-    - `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --private-key <0x...> --wallet-address <0x...> --json`
+    - `node scripts/wallet-readiness-check.js --rpc-url <url> --chain-id <id> --wallet-address <0x...> --json`
 - Output contract:
   - `ok` boolean,
   - `walletAddress`, `chainId`, `rpcUrl`,
@@ -425,7 +442,7 @@ Notes:
   - metrics: `balanceWei`, `balanceEth`, `nonce`, `minNativeBalanceWei`.
 - Failure policy: fail closed; do not proceed to action planning/sign prompt until readiness passes with `ok=true`.
 - Invocation guard:
-  - if `RPC_URL`, `CHAIN_ID`, or `PRIVATE_KEY` is missing, stop and return `readiness_input_missing`; do not continue with a bare `--json` retry.
+  - if `RPC_URL`, `CHAIN_ID`, or wallet selector context is missing, stop and return `readiness_input_missing`; do not continue with a bare `--json` retry.
 
 ### wallet-token-balance-check
 - Priority: P0.
@@ -458,6 +475,38 @@ Notes:
 - Fallback:
   - return explicit error and require operator to fix RPC or token parameters before continuing.
 
+
+### wallet-build-transfer
+- Priority: P0.
+- Status: active in MVP (plugin/MCP path).
+- Module ID: `wallet-build-transfer`.
+- Purpose: build canonical native/ERC20 transfer intent with deterministic base-units normalization.
+- MCP mapping: `POST /tools/wallet_build_transfer`.
+- Required inputs:
+  - `chainSlug`, `walletHandle` or `walletAddress`, `to`, `amount`, `amountUsd`,
+  - optional `tokenAddress`, optional `tokenDecimals`.
+- Output contract:
+  - canonical `wallet.transfer.intent.v1`, deterministic `intentHash`, and hydrated `transactionRequest` preview.
+- Execution policy:
+  - native transfer when `tokenAddress` omitted,
+  - ERC20 transfer when `tokenAddress` present,
+  - if `tokenDecimals` omitted for ERC20, resolve via on-chain `decimals()`.
+
+### wallet-execute-transfer
+- Priority: P0.
+- Status: active in MVP (plugin/MCP path).
+- Module ID: `wallet-execute-transfer`.
+- Purpose: policy-gated signer-boundary execution of canonical transfer intents.
+- MCP mapping: `POST /tools/wallet_execute_transfer`.
+- Required inputs:
+  - `chainSlug`, `walletHandle` or `walletAddress`, `intent` (`wallet.transfer.intent.v1`).
+- Output contract:
+  - signed + submitted transfer result envelope (`txHash`, status, and transfer metadata).
+- Execution policy:
+  - recompute tx request from canonical intent,
+  - refresh nonce/fees/gas at execution time from broadcast RPC,
+  - sign through signer-runtime (`category=wallet_management`) then broadcast.
+
 ### swap
 - Priority: P0.
 - Status: active in MVP (`1inch` infrastructure first).
@@ -475,14 +524,15 @@ Notes:
   - `CHAIN_ID`, `FROM_TOKEN`, `TO_TOKEN`, `AMOUNT_WEI`,
   - `ONEINCH_API_KEY`,
   - for build/execute: sender wallet address,
-  - for execute: signer private key + RPC URL.
+  - for execute: signer-runtime wallet selector + RPC URL (no raw private key input).
 - Standard run commands:
   - quote:
     - `node scripts/swap-1inch.js quote --chain-id <id> --from-token <token> --to-token <token> --amount-wei <wei> --json`
   - build:
     - `node scripts/swap-1inch.js build --chain-id <id> --from-token <token> --to-token <token> --amount-wei <wei> --from-address <wallet> --slippage-bps <bps> --json`
   - execute (explicit user confirmation required):
-    - `node scripts/swap-1inch.js execute --chain-id <id> --rpc-url <rpc> --from-token <token> --to-token <token> --amount-wei <wei> --from-address <wallet> --private-key <key> --slippage-bps <bps> --confirm-execute --json`
+    - `node scripts/swap-1inch.js execute --chain-id <id> --rpc-url <rpc> --from-token <token> --to-token <token> --amount-wei <wei> --from-address <wallet> --slippage-bps <bps> --confirm-execute --json`
+    - signing must be delegated to MCP signer-runtime with `walletHandle`/wallet policy context.
 - Output contract:
   - quote mode: route quote, destination amount, token metadata, gas estimate.
   - build mode: swap tx payload (`to`, `data`, `value`, gas fields) and routing metadata.
@@ -508,7 +558,7 @@ Notes:
   - `CHAIN_ID` or `--chain-id`,
   - `TOKEN_ADDRESS` or `--token-address`,
   - `SPENDER_ADDRESS` or `--spender-address`,
-  - owner context via `WALLET_ADDRESS`/`--owner-address` or `PRIVATE_KEY`/`--private-key` (owner can be derived from private key),
+  - owner context via `walletHandle` or `WALLET_ADDRESS`/`--owner-address`,
   - for exact mode: `DESIRED_AMOUNT_WEI` or `--desired-amount-wei`.
 - Supported modes:
   - `exact` (default, safest),
@@ -555,80 +605,61 @@ Notes:
 
 ### trade-perp
 - Priority: P0.
-- Status: active in MVP (Avantis-first, local Python runtime, no MCP required).
+- Status: active (protocol-generic MCP signer-boundary path).
 - Module ID: `trade-perp`.
-- Purpose: execute perp actions (market open, limit open, position checks, close, and limit-cancel) with Avantis SDK.
-- Scope boundary (MVP): TP/SL is not treated as guaranteed unless the runtime explicitly supports and confirms TP/SL order placement with receipts/order IDs.
-- Implementation path: local Python module using `avantis-trader-sdk` from `https://sdk.avantisfi.com/`.
-- Requirements:
-  - Python runtime on the local machine/agent (recommend Python 3.10+),
-  - package install: `pip install avantis-trader-sdk`,
-  - local signer key in env (`AVANTIS_PRIVATE_KEY`) and Base RPC endpoint (`AVANTIS_PROVIDER_URL`, default `https://mainnet.base.org`),
-  - keep signer secrets only in local env/secret storage and never paste them into chat,
-  - trade inputs: pair (`PAIR_SYMBOL`, e.g. `ETH/USD`), collateral amount, leverage, direction (`is_long`), optional limit price.
-- Oracle and monitoring policy:
-  - before monitoring/opening perps, run Avantis connectivity preflight:
-    - `node scripts/query-avantis.js health --json`
-    - `node scripts/query-avantis.js pair-feeds --pair-symbol <PAIR_SYMBOL> --json`
-  - treat Avantis pricing and PnL as oracle-authoritative (Avantis pricing is Pyth-based),
-  - for live monitoring, read position/PnL from Avantis SDK position payloads (for example `trader.trade.get_trades(...)` and returned position fields),
-  - do not compute authoritative perp PnL from CoinGecko spot prices,
-  - when external oracle validation is needed, use `query-pyth` rather than `query-coingecko`.
-- Pre-install communication policy (must enforce):
-  - before any first-time Python/SDK setup, explicitly state:
-    - what will be installed (`python venv`, `avantis-trader-sdk`),
-    - why installation is required,
-    - expected duration (can take several minutes),
-    - that terminal may appear idle while dependencies compile/download.
-  - require explicit user confirmation before running installation commands.
-  - during install, emit progress updates at least every 30-60 seconds.
-  - if install exceeds expected time, report that it is still running and ask whether to continue waiting.
-- Standard local setup:
-  - `python -m venv .venv && source .venv/bin/activate && pip install avantis-trader-sdk`
-- Local operation mapping (Avantis SDK):
-  - initialize:
-    - `trader = TraderClient(provider_url=AVANTIS_PROVIDER_URL)`
-    - `trader.set_local_signer(AVANTIS_PRIVATE_KEY)`
-  - fetch market/pair context:
-    - `trader.pairs_cache.get_pairs_info()`
-    - `trader.pairs_cache.get_pair_index(PAIR_SYMBOL)`
-  - allowance readiness:
-    - `trader.get_usdc_allowance_for_trading(trader_address)`
-    - `trader.approve_usdc_for_trading(amount_usdc)` when needed
-  - open market:
-    - `trader.trade.build_trade_open_tx(..., order_type=TradeInputOrderType.MARKET, slippage_percentage=<value>)`
-    - submit with `trader.sign_and_get_receipt(tx)`
-  - open limit:
-    - `trader.trade.build_trade_open_tx(..., order_type=TradeInputOrderType.LIMIT, open_price=<price>)`
-    - submit with `trader.sign_and_get_receipt(tx)`
-  - check open trades and pending orders:
-    - `trader.trade.get_trades(trader_address)`
-  - close position:
-    - `trader.trade.build_trade_close_tx(...)` then `trader.sign_and_get_receipt(tx)`
-  - cancel pending limit:
-    - `trader.trade.build_order_cancel_tx(...)` then `trader.sign_and_get_receipt(tx)`
-- TP/SL policy (must enforce):
-  - when user requests `take-profit` and/or `stop-loss`, the agent must either:
-    - place TP/SL using a supported Avantis SDK path and return verifiable artifacts (`txHash` and/or `orderId`), or
-    - explicitly state TP/SL placement is not executed in this run and require manual placement confirmation.
-  - never silently ignore TP/SL requests.
-  - never claim TP/SL is active without explicit verification via SDK position/order query after placement.
-  - if TP/SL cannot be placed, return `tp_sl_not_configured` and downgrade recommendation to `no_trade` unless user explicitly accepts proceeding without TP/SL.
-- Execution policy:
-  - no MCP execution dependency for this module in MVP; run locally in Python runtime,
-  - require `wallet-readiness-check`, `wallet-token-balance-check`, and explicit risk confirmation before trade open,
-  - require chain and contract sanity checks before signing,
-  - for market/limit opens, validate and echo TP/SL intent (`enabled`/`disabled`) before final sign prompt,
-  - for open-position monitoring, report Avantis-native/Pyth-backed values as primary and label CoinGecko as advisory only.
-- Safety rule:
-  - never print private key in logs,
-  - fail closed on allowance/funding mismatch, fee-check failure, or invalid pair metadata,
-  - if Avantis socket/core/feed connectivity preflight is degraded, do not claim exact live platform PnL and mark monitoring as degraded,
-  - do not claim fills; confirm state via `trader.trade.get_trades(...)` and receipt status,
-  - do not claim risk controls are active (TP/SL) unless verified post-placement.
-- Unwind/fallback:
-  - default unwind path: reduce/close via `build_trade_close_tx`,
-  - if close/cancel build fails, return `perp_unwind_blocked` and require operator intervention.
+- Purpose: execute perp actions through generic MCP perps tools with explicit `protocolSlug` selection.
+- Scope boundary: TP/SL is not treated as guaranteed unless runtime explicitly supports and confirms TP/SL placement with receipts/order IDs.
+- Implementation path: `plugin -> MCP perps_* -> signer-runtime sign -> protocol adapter submit`.
+- Hard boundary rule: never request, accept, store, or pass raw private keys for perp execution.
+
+Required inputs:
+- `protocolSlug`, `chainSlug`, market/action context,
+- wallet selector (`walletHandle` preferred, or `walletAddress`),
+- order parameters (`side`, `collateralUsd`, `leverage`, `orderType`, optional `limitPrice`),
+- risk-order inputs when applicable (`takeProfit`, `stopLoss`).
+
+Canonical perps tool flow:
+- read state:
+  - `perps_fetch_open_positions`
+  - `perps_fetch_pending_orders`
+  - `perps_fetch_market_state`
+- build intents:
+  - `perps_build_open_order`
+  - `perps_build_close_order`
+  - `perps_build_cancel_order`
+  - `perps_set_risk_orders`
+- pre-execution and execution:
+  - `perps_simulate_intent`
+  - `perps_execute_intent`
+
+Oracle and monitoring policy:
+- run protocol connectivity/oracle preflights before leveraged execution (`perps_fetch_market_state` + `query_pyth` via plugin/MCP as default; script fallback only when needed),
+- treat protocol-native + execution-grade oracle data as authoritative for live perp monitoring,
+- treat CoinGecko spot context as advisory only.
+
+TP/SL policy (must enforce):
+- when user requests TP/SL, either:
+  - place TP/SL through supported protocol adapter path and return verifiable artifacts (`txHash` and/or `orderId`), or
+  - explicitly state TP/SL was not executed and require manual placement confirmation.
+- never silently ignore TP/SL requests.
+- never claim TP/SL is active without explicit verification via position/order query.
+- if TP/SL cannot be placed, return `tp_sl_not_configured` and downgrade recommendation to `no_trade` unless user explicitly accepts proceeding without TP/SL.
+
+Execution policy:
+- no local direct-signing runtime path for this module,
+- require `wallet-readiness-check`, `wallet-token-balance-check`, and explicit risk confirmation before open/close/cancel actions,
+- require chain and contract sanity checks before signing,
+- for market/limit opens, validate and echo TP/SL intent (`enabled`/`disabled`) before final sign prompt,
+- confirm execution/fill state via protocol adapter readback + receipts.
+
+Safety rule:
+- fail closed on allowance/funding mismatch, fee-check failure, invalid pair metadata, or adapter connectivity degradation,
+- do not claim fills or risk controls without post-submit verification,
+- do not bypass MCP signer-runtime boundary for any state-changing perp action.
+
+Unwind/fallback:
+- default unwind path: `perps_build_close_order` + `perps_execute_intent`,
+- if close/cancel build fails, return `perp_unwind_blocked` and require operator intervention.
 
 ### trade-options
 - Status: placeholder only.
@@ -671,21 +702,24 @@ Notes:
 
 ### query-coingecko
 - Priority: P0.
-- Status: active in MVP (local bundled module).
+- Status: active in MVP (plugin/MCP-first in `market_intel`, script fallback).
 - Module ID: `query-coingecko`.
 - Purpose: query CoinGecko market data for advisory market context (pricing, movement, liquidity metrics, token discovery).
-- Implementation path: `scripts/query-coingecko.js`.
-- Supported API modes:
-  - `simple-price` -> `/api/v3/simple/price`,
-  - `token-price` -> `/api/v3/simple/token_price/{asset_platform_id}`,
-  - `coin` -> `/api/v3/coins/{id}`,
+- Implementation path:
+  - primary: `plugin -> MCP /tools/query_coingecko`,
+  - fallback: `scripts/query-coingecko.js`.
+- Supported MCP modes (current):
+  - `simple_price` -> `/api/v3/simple/price`,
   - `search` -> `/api/v3/search`.
+- Script-only extended modes (not in current MCP wrapper):
+  - `token-price` -> `/api/v3/simple/token_price/{asset_platform_id}`,
+  - `coin` -> `/api/v3/coins/{id}`.
 - Credential policy:
   - optional API key in local env (`COINGECKO_API_KEY`),
   - `demo` plan uses header `x-cg-demo-api-key`,
   - `pro` plan uses header `x-cg-pro-api-key`,
   - key is local-only and must never be pasted into chat.
-- Standard run commands:
+- Standard run commands (fallback script path):
   - simple price:
     - `node scripts/query-coingecko.js simple-price --ids ethereum,bitcoin --vs-currencies usd --json`
   - token price:
@@ -695,7 +729,7 @@ Notes:
   - search:
     - `node scripts/query-coingecko.js search --query usdc --json`
 - Output contract:
-  - returns request metadata (mode/path/plan) and parsed data payload from CoinGecko response.
+  - returns provider metadata + parsed payload from wrapper/script response.
 - Execution policy:
   - read-only HTTP data retrieval,
   - treat API failures/rate-limit responses as advisory failure, not execution authorization.
@@ -703,53 +737,54 @@ Notes:
   - never use CoinGecko as sole execution authority; reconcile all execution-critical fields with `clawdefi-core`,
   - never use CoinGecko as authoritative source for perp liquidation/PnL monitoring.
 - Fallback:
-  - if unavailable, return explicit error/staleness warning and continue only with core-backed deterministic data.
+  - if MCP wrapper mode is unsupported for requested data shape, use script fallback explicitly and mark advisory provenance.
 
 ### query-avantis
 - Priority: P0.
-- Status: active in MVP (local bundled module).
+- Status: active in MVP (plugin/MCP path).
 - Module ID: `query-avantis`.
-- Purpose: preflight Avantis runtime connectivity and query pair-feed data used by perp monitoring/trade flows.
-- Implementation path: `scripts/query-avantis.js`.
-- Supported modes:
-  - `health` -> checks DNS resolution and HTTPS reachability for Avantis socket/core/feed endpoints,
-  - `pair-feeds` -> fetches socket pair-feed payload and resolves pair metadata for a symbol.
+- Purpose: preflight Avantis market/feed context used by perp monitoring and execution.
+- Implementation path: `plugin -> MCP perps_fetch_market_state (protocolSlug=avantis)`.
+- Supported mode (current):
+  - `market-state` -> fetch pair metadata/open-interest context via Avantis adapter.
 - Required inputs:
-  - for `health`: none (optional endpoint overrides),
-  - for `pair-feeds`: `pairSymbol` (for example `ETH/USD`).
-- Standard run commands:
-  - health:
-    - `node scripts/query-avantis.js health --json`
-  - pair-feed lookup:
-    - `node scripts/query-avantis.js pair-feeds --pair-symbol ETH/USD --json`
+  - `protocolSlug=avantis`,
+  - `chainSlug`,
+  - `market` (for example `ETH-USD`).
+- Standard run flow:
+  - `perps_fetch_market_state` (preferred),
+  - optional legacy script fallback only when explicitly enabled: `node scripts/query-avantis.js pair-feeds --pair-symbol ETH/USD --json`.
 - Output contract:
-  - endpoint DNS + HTTP status snapshots (`socketApi`, `coreApi`, `feedV3`),
-  - monitoring status (`ok` or `degraded`) with reason,
-  - pair-feed metadata (`feedId`, `lazerFeedId`, listed status) for `pair-feeds` mode.
+  - protocol/chain/market context,
+  - pair metadata (`pairIndex`, symbol/feed linkage when available),
+  - open-interest snapshot context.
 - Execution policy:
-  - run before live perp monitoring claims and before Avantis position PnL assertions,
-  - retry with bounded backoff on transient failures.
+  - run before live perp monitoring claims and before Avantis position assertions,
+  - keep feed/market reads inside MCP adapter path by default.
 - Safety rule:
-  - if `monitoring.status=degraded`, do not present precise live platform PnL as authoritative,
-  - if requested pair is not found in feed payload, return degraded signal and block precision monitoring claims.
+  - if market-state fetch fails or returns missing pair metadata, mark monitoring as degraded,
+  - do not present precise platform PnL as authoritative when preflight is degraded.
 - Fallback:
-  - mark monitoring as degraded,
-  - run `query-pyth` as oracle fallback context and state Avantis feed remains unavailable.
+  - run `query_pyth` via plugin/MCP as default oracle fallback context (or `query-pyth` script fallback when needed) and state Avantis feed/market path is degraded.
 
 ### query-pyth
 - Priority: P0.
-- Status: active in MVP (local bundled module).
+- Status: active in MVP (plugin/MCP-first in `market_intel`, script fallback).
 - Module ID: `query-pyth`.
-- Purpose: query Pyth oracle data via Hermes endpoints and expose Pyth Pro WebSocket endpoint guidance for low-latency monitoring paths.
-- Implementation path: `scripts/query-pyth.js`.
-- Supported modes:
+- Purpose: query Pyth oracle data and endpoint metadata for low-latency monitoring paths.
+- Implementation path:
+  - primary: `plugin -> MCP /tools/query_pyth`,
+  - fallback: `scripts/query-pyth.js`.
+- Supported MCP modes (current):
   - `latest` -> Hermes REST `GET /v2/updates/price/latest?ids[]=...`,
-  - `stream` -> Hermes SSE `GET /v2/updates/price/stream?ids[]=...`,
-  - `pro-wss` -> returns official Pyth Pro WebSocket endpoint set and auth requirements.
+  - `stream` -> metadata-only endpoint guidance (`transport: sse|pro-wss`), not live event streaming.
+- Script fallback modes (for active stream/event capture):
+  - `stream` -> Hermes SSE event capture (`max-events` bounded),
+  - `pro-wss` -> Pyth Pro endpoint guidance/auth contract.
 - Required inputs:
   - for `latest`/`stream`: `feedIds` (comma-separated Pyth feed IDs),
   - for `pro-wss`: no feed IDs required (optional token presence signal only).
-- Standard run commands:
+- Standard run commands (fallback script path):
   - latest:
     - `node scripts/query-pyth.js latest --feed-ids <feed_id_1,feed_id_2> --json`
   - stream (capture N events then return):
@@ -757,15 +792,15 @@ Notes:
   - pro-wss endpoint guidance:
     - `node scripts/query-pyth.js pro-wss --json`
 - Output contract:
-  - mode-specific payload with request metadata and parsed response body/events,
-  - in `pro-wss` mode includes endpoint list and auth header contract (`Authorization: Bearer <PYTH_PRO_ACCESS_TOKEN>`).
+  - MCP path returns provider metadata + payload (or stream endpoint metadata),
+  - script path can return bounded live stream events.
 - Execution policy:
   - read-only market/oracle query path,
   - treat oracle query failure as a blocking signal for real-time perp monitoring confidence.
 - Safety rule:
   - for Avantis/perp monitoring, treat Pyth/Avantis-native values as authoritative over CoinGecko.
 - Fallback:
-  - if Pyth is unavailable, explicitly mark monitoring as degraded and avoid precision PnL claims.
+  - if MCP stream metadata is insufficient for use-case, run explicit script fallback or a dedicated stream worker and mark source/latency assumptions.
 
 ### query-contract-verification
 - Priority: P0.
