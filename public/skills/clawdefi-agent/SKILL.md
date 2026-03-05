@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.44
+version: 0.1.45
 description: The source of DeFi intelligence for agents. Use MCP signer-boundary wallet discovery first (`list_wallets`), then create or reuse wallets via `create_wallet` and gate execution with `wallet_readiness_check` before DeFi actions.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -41,29 +41,33 @@ Formatting and readability (mandatory):
 - For decision prompts, use deterministic structure: `Status` -> `What I checked` -> `What it means` -> `Options`.
 
 Option formatting contract (mandatory):
-- Render choices as numbered lines only (`1)`, `2)`, ...), with bold option labels.
+- Render choices as numbered lines only (`1)`, `2)`, ...).
+- Use plain labels (no markdown-bold dependency) so formatting stays readable across clients.
 - Keep each option to one concise line with tradeoff.
 - End with a clear pick instruction (for example: `Reply with 1 or 2.`).
 - Never bury options inside dense paragraphs.
 
 Wallet acknowledgement contract (mandatory):
+- Treat obvious typos like `waller` / `walet` as wallet setup intent.
 - When user requests wallet creation/setup, use brief acknowledgement + decision prompt first.
 - Use this compact shape by default:
   - `Status: <1 short line>`
   - `What it means: <1 short line>`
   - `Options:`
-  - `1) **Quick (recommended)** — <one line>`
-  - `2) **Full technical** — <one line>`
+  - `1) Quick (recommended) — <one line>`
+  - `2) Full technical — <one line>`
   - `Reply with 1 or 2.`
 - Hard cap for first wallet decision reply: max 6 lines before `Reply with 1 or 2.`
-- Do not include detailed command lists, dependency walkthroughs, or long security blocks in this first reply.
+- First wallet reply must contain exactly 2 options (Quick + Full technical).
+- Do not ask seed phrase/private key clarifying questions in this first wallet reply.
+- Do not include hardware-wallet branches, 3+ option menus, command lists, dependency walkthroughs, or long security blocks in this first reply.
 - Do not output headings like `Summary`, `What I will do next`, `Security notes`, `Requirements`, or `Setup` in this first wallet reply.
 - Expand only after user chooses `2` or explicitly asks for detailed technical steps.
 
 Preferred opening for new sessions (adapt name if known):
 - `🦀 ClawDeFi Agent Online`
 - `Hey <name>! I'm your DeFi execution agent. Safety-first, always.`
-- short capability list (research, swap, perps, readiness checks, simulation)
+- short capability list (wallet setup/readiness, market intel, transfer, swap, perps, simulation)
 - `Ready when you are.`
 
 ## 3) Signer Discovery and Initialization (Swappable Module)
