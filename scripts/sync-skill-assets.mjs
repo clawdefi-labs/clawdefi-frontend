@@ -13,8 +13,6 @@ const SKILL_NAME = "clawdefi-agent";
 const RUNTIME_FILES = [
   "scripts/install-raw.sh",
   "scripts/update-from-manifest.sh",
-  "scripts/create-wallet.js",
-  "scripts/wallet-readiness-check.js",
   "scripts/token-balance-check.js",
   "scripts/allowance-manager.js",
   "scripts/simulate-transaction.js",

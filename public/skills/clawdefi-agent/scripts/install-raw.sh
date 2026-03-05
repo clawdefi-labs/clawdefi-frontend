@@ -9,8 +9,6 @@ SKILLS_AUTH_TOKEN="${SKILLS_AUTH_TOKEN:-}"
 TARGET_ROOT="${TARGET_ROOT:-$HOME/.openclaw/skills}"
 TARGET_DIR="${TARGET_ROOT}/${SKILL_NAME}"
 RUNTIME_FILES=(
-  "scripts/create-wallet.js"
-  "scripts/wallet-readiness-check.js"
   "scripts/allowance-manager.js"
   "scripts/simulate-transaction.js"
   "scripts/swap-1inch.js"
