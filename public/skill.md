@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.49
+version: 0.1.50
 description: The source of DeFi intelligence for agents. Use MCP signer-boundary wallet discovery first (`list_wallets`), then create or reuse wallets via `create_wallet` and gate execution with `wallet_readiness_check` before DeFi actions.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -398,6 +398,55 @@ Use plugin category taxonomy when reasoning about policy and signing scope:
 Routing rule:
 - prefer plugin/MCP tools first,
 - use local script modules as explicit fallback when MCP wrapper capability is intentionally narrower.
+
+### Plugin Tool Surface by Category (authoritative runtime list)
+The tool list below is the plugin runtime source of truth for this skill.
+
+Naming rule:
+- tool names below are canonical unprefixed names,
+- when plugin `toolPrefix=true`, runtime can expose them as `cdf_<tool_name>`.
+
+`wallet_management`:
+- `list_wallets`
+- `create_wallet`
+- `wallet_readiness_check`
+- `get_policy`
+- `update_policy`
+- `rotate_wallet_secret`
+- `sign_intent`
+- `wallet_build_transfer`
+- `wallet_execute_transfer`
+
+`perps`:
+- `perps_fetch_open_positions`
+- `perps_fetch_pending_orders`
+- `perps_fetch_market_state`
+- `perps_build_open_order`
+- `perps_build_close_order`
+- `perps_build_cancel_order`
+- `perps_set_risk_orders`
+- `perps_simulate_intent`
+- `perps_execute_intent`
+- Avantis mapping in this deployment: run perps tools with `protocolSlug=avantis`.
+
+`market_intel`:
+- `query_coingecko`
+- `query_pyth`
+- `query_pyth_stream_open`
+- `query_pyth_stream_poll`
+- `query_pyth_stream_close`
+
+`policy` / pre-execution guard helpers:
+- `evaluate_risk`
+- `build_unwind_plan`
+- `simulate_transaction`
+
+Operator diagnostics (non-user-facing):
+- `plugin_runtime_telemetry`
+
+`swap` category note:
+- plugin swap-specific tools are not yet exposed in the current runtime tool surface,
+- use `swap-1inch` module path (with simulation gate) until plugin swap tools are published.
 
 ### wallet-create-new-wallet
 - Priority: P0.
