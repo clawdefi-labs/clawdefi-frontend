@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.47
+version: 0.1.49
 description: The source of DeFi intelligence for agents. Use MCP signer-boundary wallet discovery first (`list_wallets`), then create or reuse wallets via `create_wallet` and gate execution with `wallet_readiness_check` before DeFi actions.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -28,6 +28,7 @@ Authority boundary:
 - If user asks model/LLM info, answer in one concise line.
 - For wallet onboarding, provide a quick path first; provide full technical checklist only on explicit request.
 - If user says "create wallet" (or equivalent) as a direct request, execute wallet creation immediately via MCP signer-boundary quick path.
+- After direct execute intent is confirmed (for example: "yes", "proceed"), do not ask additional consent/option prompts.
 - Use wallet choice prompts only when the user is asking for setup guidance/options.
 - Wallet choice prompts must stay compact (max ~6 lines before the pick instruction).
 - Do not include long "security notes", full command checklists, or module deep-dives unless user explicitly asks for full technical detail.
@@ -64,6 +65,7 @@ Wallet first-reply contract (mandatory):
 - Guidance reply must contain exactly 2 options (Quick + Full technical).
 - Do not ask seed phrase/private key clarifying questions in the first wallet reply.
 - Do not include hardware-wallet branches, 3+ option menus, command lists, dependency walkthroughs, or long security blocks in the first wallet reply.
+- If wallet MCP tools are unavailable, return one concise runtime-not-ready error and stop; do not start gateway diagnostics unless the user explicitly asks for diagnostics.
 - Do not output headings like `Summary`, `What I will do next`, `Security notes`, `Requirements`, or `Setup` in the first wallet reply.
 - Expand only after user chooses `2` or explicitly asks for detailed technical steps.
 
@@ -79,6 +81,14 @@ Use this section first whenever wallet execution is required.
 Primary path (preferred):
 - use plugin/MCP signer-boundary tools for wallet lifecycle and policy checks (`list_wallets`, `create_wallet`, `wallet_readiness_check`, `get_policy`, `update_policy`, `sign_intent`).
 - do not use local wallet-file discovery as the primary decision path.
+
+Wallet tool contract (mandatory, user-manual level):
+- discover wallets only via `list_wallets`.
+- create/register wallets only via `create_wallet`.
+- readiness gate only via `wallet_readiness_check`.
+- if user directly asks to create wallet now, execute `create_wallet` immediately (no options menu detour).
+- if wallet tools are unavailable in-session, return one concise `runtime_not_ready` response and stop.
+- never fabricate tool outcomes or request IDs; report only MCP-returned values.
 
 Required first-sight behavior (exact policy, no paraphrase):
 - first check MCP signer directory via `list_wallets`.
@@ -226,7 +236,7 @@ openclaw gateway restart
     "requirePrincipal": true
   }
   ```
-- OpenClaw service command checks:
+- OpenClaw service command checks (operator diagnostics only; do not run before first wallet MCP attempt on direct create intent):
   - `openclaw status`
   - `openclaw gateway status`
   - `openclaw gateway start` (if stopped)
@@ -268,7 +278,9 @@ Failure policy:
 - if any onboarding checkpoint fails, mark system `not_ready` and do not proceed to execution guidance.
 
 ## 5) Mandatory Runtime Workflow
-0. Confirm OpenClaw runtime onboarding is complete (`plugin + MCP + signer-boundary`); if not, execute section 4 first and block execution paths until ready.
+0. Branch by user intent first:
+- direct create intent (`create wallet`, `yes create`, `proceed`): attempt signer-boundary MCP wallet flow immediately; do not insert extra confirmation or gateway health prompts.
+- setup guidance intent: use compact 2-option prompt.
 1. Run signer discovery gate:
 - first check signer directory via `list_wallets`.
 - if wallets exist, do not ask generic wallet-existence questions; ask only:
@@ -278,6 +290,8 @@ Failure policy:
 - if signer directory has no wallets and user explicitly asks to create one, run `create_wallet` quick path immediately and report result briefly.
 - if signer directory has no wallets and user asks for setup guidance, show compact 2-option prompt (Quick vs Full technical), then run selected setup via `create_wallet`.
 - in this first decision prompt, avoid long command/security blocks; provide those only after explicit request for full technical detail.
+- if `list_wallets` / `create_wallet` tools are unavailable in-session, return one concise `runtime_not_ready` response and stop (no extra consent loop, no gateway repair menu unless user explicitly asks).
+- never fabricate request IDs; only report request IDs returned by real MCP tool responses.
 2. Run `wallet_readiness_check` (chain, balance, nonce, RPC health, signer policy/key state).
   - preflight required chain/wallet context:
     - ensure `chainSlug` and wallet selector (`walletHandle` preferred, or wallet address) are available,
