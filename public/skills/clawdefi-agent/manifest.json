@@ -1,28 +1,18 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.51",
+  "version": "0.1.52",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "f914405acdcb301d6c9dc2e60e519da8a754ef57f96757b948ff10bcaae642a7",
+  "sha256": "d518cdda44d698f85ec2c20c62dc4973526be6abba1cab5e58bc589f0120bb53",
   "files": [
     {
       "path": "scripts/install-raw.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/install-raw.sh",
-      "sha256": "a0e3bf148d05b0aae3bb0c4096d6c020deff7510f332c20d1dec8a76bd47f263"
+      "sha256": "2d75a9c3cfd607011d1f37526c6788006ac8d62dd64ec49b3a7d3b58805c6433"
     },
     {
       "path": "scripts/update-from-manifest.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/update-from-manifest.sh",
-      "sha256": "6676502ec2aaed91b1df2615e7e3fcbc686af410035f2938c33f6df60ea02bbc"
-    },
-    {
-      "path": "scripts/token-balance-check.js",
-      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/token-balance-check.js",
-      "sha256": "b7660dec142a420b040c3b7292aa068962e9e6c5fbf38373fda23c6196622a76"
-    },
-    {
-      "path": "scripts/allowance-manager.js",
-      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/allowance-manager.js",
-      "sha256": "d5e1c4cb035f66785325d771580ab294aa473500a1d33b6e9ef7ccd75338b509"
+      "sha256": "4f4408dd5fc8a2bea3194f22d9e9d53ab2ec18bb67701c2f20c0d82031a94979"
     },
     {
       "path": "scripts/simulate-transaction.js",

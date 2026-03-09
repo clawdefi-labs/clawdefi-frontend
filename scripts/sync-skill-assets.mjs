@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -13,8 +13,6 @@ const SKILL_NAME = "clawdefi-agent";
 const RUNTIME_FILES = [
   "scripts/install-raw.sh",
   "scripts/update-from-manifest.sh",
-  "scripts/token-balance-check.js",
-  "scripts/allowance-manager.js",
   "scripts/simulate-transaction.js",
   "scripts/swap-1inch.js",
   "scripts/query-protocol.js",
@@ -129,6 +127,24 @@ async function writeText(targetPath, content) {
   await writeFile(targetPath, content, "utf8");
 }
 
+async function prunePublishedRuntimeFiles() {
+  const scriptsDir = path.join(OUTPUT_SKILL_ROOT, "scripts");
+  if (!(await fileExists(scriptsDir))) {
+    return;
+  }
+
+  const allowed = new Set(RUNTIME_FILES.map((runtimeFile) => path.basename(runtimeFile)));
+  for (const entry of await readdir(scriptsDir, { withFileTypes: true })) {
+    if (!entry.isFile()) {
+      continue;
+    }
+    if (allowed.has(entry.name)) {
+      continue;
+    }
+    await rm(path.join(scriptsDir, entry.name), { force: true });
+  }
+}
+
 async function hasCompletePublishedArtifacts() {
   const requiredPaths = [
     path.join(OUTPUT_ROOT, "skill.md"),
@@ -164,6 +180,7 @@ async function performSync() {
   const version = parseFrontmatterVersion(skillText);
   const skillSha = sha256(skillText);
 
+  await prunePublishedRuntimeFiles();
   await writeText(path.join(OUTPUT_ROOT, "skill.md"), skillText);
   await writeText(path.join(OUTPUT_SKILL_ROOT, "SKILL.md"), skillText);
 
@@ -220,6 +237,7 @@ async function performSyncFromExistingArtifacts() {
   const version = parseFrontmatterVersion(skillText);
   const skillSha = sha256(skillText);
 
+  await prunePublishedRuntimeFiles();
   await writeText(path.join(OUTPUT_ROOT, "skill.md"), skillText);
   await writeText(path.join(OUTPUT_SKILL_ROOT, "SKILL.md"), skillText);
 
