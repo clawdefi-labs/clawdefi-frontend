@@ -42,7 +42,7 @@ bash {baseDir}/scripts/onboard.sh
 This onboarding path:
 - checks `node`, `npm`, and `openclaw`,
 - creates a local WDK MCP runtime at `~/.openclaw/clawdefi/wdk-mcp`,
-- installs `@tetherto/wdk`, `@tetherto/wdk-wallet-evm`, `@tetherto/wdk-wallet-solana`, `@tetherto/wdk-mcp-toolkit`, and `@modelcontextprotocol/sdk`,
+- installs `@tetherto/wdk`, `@tetherto/wdk-wallet-evm`, `@tetherto/wdk-wallet-solana`, WDK MCP toolkit (GitHub source), and `@modelcontextprotocol/sdk`,
 - scaffolds a local stdio MCP server with EVM, Solana, and pricing tools,
 - writes local config templates only,
 - verifies that the local environment is ready.
