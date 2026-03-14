@@ -7,12 +7,12 @@
     {
       "path": "scripts/install-raw.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/install-raw.sh",
-      "sha256": "879a69b032eafe5339f1dae607b7a84a3ffb7a7ffeab211839cc04ab2668a21f"
+      "sha256": "ffe9e36ab1d34a4792653cbce6b0a4bd747da2c9bc2d49ae3e894103eacdeb55"
     },
     {
       "path": "scripts/update-from-manifest.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/update-from-manifest.sh",
-      "sha256": "663bc64afc3f7f3aa39e2be2c395d65971c978d0980d626ec5446941c73246bc"
+      "sha256": "48f5f95addc4605e270782d70cd7e13b78db369bd81f9801be2e0f80de815ba8"
     },
     {
       "path": "scripts/onboard.sh",

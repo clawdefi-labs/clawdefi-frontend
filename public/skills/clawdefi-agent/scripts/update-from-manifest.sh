@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SKILL_NAME="${SKILL_NAME:-clawdefi-agent}"
-SKILLS_BASE_URL="${SKILLS_BASE_URL:-https://skills.clawdefi.ai}"
+SKILLS_BASE_URL="${SKILLS_BASE_URL:-https://www.clawdefi.ai/skills}"
 MANIFEST_URL="${MANIFEST_URL:-${SKILLS_BASE_URL}/${SKILL_NAME}/manifest.json}"
 SKILLS_AUTH_TOKEN="${SKILLS_AUTH_TOKEN:-}"
 TARGET_ROOT="${TARGET_ROOT:-$HOME/.openclaw/skills}"
