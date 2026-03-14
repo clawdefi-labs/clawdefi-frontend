@@ -127,6 +127,23 @@ async function loadSourceFile(relativePath) {
     return { content, source: "local" };
   }
 
+  const publishedSkillPath =
+    relativePath === "SKILL.md"
+      ? path.join(OUTPUT_SKILL_ROOT, "SKILL.md")
+      : path.join(OUTPUT_SKILL_ROOT, relativePath);
+  if (await fileExists(publishedSkillPath)) {
+    const content = await readFile(publishedSkillPath, "utf8");
+    return { content, source: "published" };
+  }
+
+  if (relativePath === "SKILL.md") {
+    const publishedRootSkillPath = path.join(OUTPUT_ROOT, "skill.md");
+    if (await fileExists(publishedRootSkillPath)) {
+      const content = await readFile(publishedRootSkillPath, "utf8");
+      return { content, source: "published" };
+    }
+  }
+
   const remoteUrl = `${SOURCE_BASE_URL}/${relativePath}`;
   const content = await fetchText(remoteUrl);
   return { content, source: "remote" };
