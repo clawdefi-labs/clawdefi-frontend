@@ -13,6 +13,17 @@ const SKILL_NAME = "clawdefi-agent";
 const RUNTIME_FILES = [
   "scripts/install-raw.sh",
   "scripts/update-from-manifest.sh",
+  "scripts/onboard.sh",
+  "scripts/update.sh",
+  "scripts/wallet-common.js",
+  "scripts/wallet-create.js",
+  "scripts/wallet-import.js",
+  "scripts/wallet-discover.js",
+  "scripts/wallet-select.js",
+  "scripts/wallet-balance.js",
+  "scripts/wallet-sign.js",
+  "scripts/wallet-sign-broadcast.js",
+  "scripts/wallet-transfer.js",
   "scripts/simulate-transaction.js",
   "scripts/swap-1inch.js",
   "scripts/query-protocol.js",
@@ -26,7 +37,6 @@ const FRONTEND_ROOT = path.resolve(__dirname, "..");
 const WORKSPACE_ROOT = path.resolve(FRONTEND_ROOT, "..");
 const LOCAL_SKILL_ROOT = path.join(WORKSPACE_ROOT, "skill");
 const DISABLE_LOCAL_SOURCE = process.env.SKILL_DISABLE_LOCAL === "1";
-const STRICT_SYNC = process.env.SKILL_SYNC_STRICT === "1";
 const CANONICAL_PUBLIC_SKILL_BASE_URL = "https://www.clawdefi.ai/skills/clawdefi-agent";
 const USE_VERCEL_DEPLOY_BASE_URL = process.env.SKILL_USE_VERCEL_URL === "1";
 const VERCEL_DEPLOY_BASE_URL = process.env.VERCEL_URL
@@ -145,22 +155,6 @@ async function prunePublishedRuntimeFiles() {
   }
 }
 
-async function hasCompletePublishedArtifacts() {
-  const requiredPaths = [
-    path.join(OUTPUT_ROOT, "skill.md"),
-    path.join(OUTPUT_SKILL_ROOT, "SKILL.md"),
-    path.join(OUTPUT_SKILL_ROOT, "manifest.json"),
-    ...RUNTIME_FILES.map((runtimeFile) => path.join(OUTPUT_SKILL_ROOT, runtimeFile))
-  ];
-
-  for (const requiredPath of requiredPaths) {
-    if (!(await fileExists(requiredPath))) {
-      return false;
-    }
-  }
-  return true;
-}
-
 async function performSync() {
   const copiedFrom = new Set();
   const fileMap = new Map();
@@ -216,76 +210,8 @@ async function performSync() {
   console.log(`Published entrypoints: /skill.md and /skills/${SKILL_NAME}/SKILL.md`);
 }
 
-async function performSyncFromExistingArtifacts() {
-  const fileMap = new Map();
-  const existingSkillPath = path.join(OUTPUT_SKILL_ROOT, "SKILL.md");
-  const existingRootSkillPath = path.join(OUTPUT_ROOT, "skill.md");
-  const skillPathToRead = (await fileExists(existingSkillPath))
-    ? existingSkillPath
-    : existingRootSkillPath;
-  const existingSkill = await readFile(skillPathToRead, "utf8");
-  fileMap.set("SKILL.md", existingSkill);
-
-  for (const runtimeFile of RUNTIME_FILES) {
-    const runtimePath = path.join(OUTPUT_SKILL_ROOT, runtimeFile);
-    const runtimeContent = await readFile(runtimePath, "utf8");
-    fileMap.set(runtimeFile, rewriteRuntimeFilePublicUrls(runtimeFile, runtimeContent));
-  }
-
-  const rawSkillText = fileMap.get("SKILL.md");
-  const skillText = rewriteSkillPublicUrls(rawSkillText);
-  const version = parseFrontmatterVersion(skillText);
-  const skillSha = sha256(skillText);
-
-  await prunePublishedRuntimeFiles();
-  await writeText(path.join(OUTPUT_ROOT, "skill.md"), skillText);
-  await writeText(path.join(OUTPUT_SKILL_ROOT, "SKILL.md"), skillText);
-
-  const filesManifest = [];
-  for (const runtimeFile of RUNTIME_FILES) {
-    const content = fileMap.get(runtimeFile);
-    const outPath = path.join(OUTPUT_SKILL_ROOT, runtimeFile);
-    await writeText(outPath, content);
-    filesManifest.push({
-      path: runtimeFile,
-      url: `${PUBLIC_SKILL_BASE_URL}/${runtimeFile}`,
-      sha256: sha256(content)
-    });
-  }
-
-  const manifest = {
-    name: SKILL_NAME,
-    version,
-    skill_url: `${PUBLIC_SKILL_BASE_URL}/SKILL.md`,
-    sha256: skillSha,
-    files: filesManifest
-  };
-
-  await writeText(
-    path.join(OUTPUT_SKILL_ROOT, "manifest.json"),
-    `${JSON.stringify(manifest, null, 2)}\n`
-  );
-
-  console.log(
-    `Synced ${SKILL_NAME} assets (version=${version}, source=published) to ${OUTPUT_SKILL_ROOT}`
-  );
-  console.log(`Published entrypoints: /skill.md and /skills/${SKILL_NAME}/SKILL.md`);
-}
-
 async function main() {
-  try {
-    await performSync();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!STRICT_SYNC && (await hasCompletePublishedArtifacts())) {
-      await performSyncFromExistingArtifacts();
-      console.warn(
-        `sync-skill-assets warning: ${message}. Re-synced from existing published skill artifacts in public/.`
-      );
-      return;
-    }
-    throw error;
-  }
+  await performSync();
 }
 
 main().catch((error) => {

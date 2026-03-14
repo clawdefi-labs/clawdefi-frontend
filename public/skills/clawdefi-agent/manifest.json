@@ -15,6 +15,61 @@
       "sha256": "663bc64afc3f7f3aa39e2be2c395d65971c978d0980d626ec5446941c73246bc"
     },
     {
+      "path": "scripts/onboard.sh",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/onboard.sh",
+      "sha256": "002c6b428c0b0b4bf47384091d1ceac57acea62bb13d4d656eb61c99c30034f8"
+    },
+    {
+      "path": "scripts/update.sh",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/update.sh",
+      "sha256": "b9ab663ef3d4096caf4f11e4bb731e1e46a027b1945386fa68c4575d79238d7b"
+    },
+    {
+      "path": "scripts/wallet-common.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-common.js",
+      "sha256": "7a465b96a632a47a52abc97cbf699f41012e959b61db3d2615c31cf1d2541755"
+    },
+    {
+      "path": "scripts/wallet-create.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-create.js",
+      "sha256": "aea9f60f8e0d0b2c8a47340551318807ea89ee39f56945696f3ad4204d0a24ea"
+    },
+    {
+      "path": "scripts/wallet-import.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-import.js",
+      "sha256": "8555a8126337d21cf788d4255db99038bb8b858fbf249f5f6dca72c06a1c7426"
+    },
+    {
+      "path": "scripts/wallet-discover.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-discover.js",
+      "sha256": "2f3b66cf22a7a7cf81e66e78f0905b221bbbc665ef00202b46c5b8d3a645da9a"
+    },
+    {
+      "path": "scripts/wallet-select.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-select.js",
+      "sha256": "c1bda7866d7787012d2b779d0a7150d882a1a2866d9fa76a59f4363feb53c4ee"
+    },
+    {
+      "path": "scripts/wallet-balance.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-balance.js",
+      "sha256": "91f835bc7a0049beb4d1b544eee37da451c7f62b69dbf50ef1431ad4ccb8c342"
+    },
+    {
+      "path": "scripts/wallet-sign.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-sign.js",
+      "sha256": "6ea0693aca246f047a04f7ead0f75792b73fbf4517098d34fdedf184855a9734"
+    },
+    {
+      "path": "scripts/wallet-sign-broadcast.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-sign-broadcast.js",
+      "sha256": "39baacfc348c883a908142532ffb349d3ed68ea2417c0a793e1a5846295d58ba"
+    },
+    {
+      "path": "scripts/wallet-transfer.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-transfer.js",
+      "sha256": "252fda849f663921efce419c9bc8fe5c0839cb528859f5646d6c1e412a2f5b7d"
+    },
+    {
       "path": "scripts/simulate-transaction.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/simulate-transaction.js",
       "sha256": "83e383e744687d4d63ce62df98ddba63dedd70af26b31e17048de0fb90a78a8a"
