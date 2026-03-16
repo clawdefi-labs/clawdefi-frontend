@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.56
+version: 0.1.57
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -155,6 +155,22 @@ node {baseDir}/scripts/wallet-balance.js --chain base-mainnet --index 0
 
 ```bash
 node {baseDir}/scripts/wallet-balance.js --chain ethereum-mainnet --tokens 0xdAC17F958D2ee523a2206206994597C13D831ec7
+```
+
+#### Query Total Portfolio (ClawDeFi Intel)
+Use to fetch normalized wallet portfolio intelligence from ClawDeFi backend.
+This merges and re-digests multiple upstream data sources into ClawDeFi output format.
+
+Use selected local wallet:
+
+```bash
+node {baseDir}/scripts/wallet-total-portfolio.js --chains ethereum-mainnet,base-mainnet,bnb-smart-chain,solana
+```
+
+Use explicit wallet address:
+
+```bash
+node {baseDir}/scripts/wallet-total-portfolio.js --address 0xabc --chains base-mainnet,bnb-smart-chain
 ```
 
 #### Sign Message

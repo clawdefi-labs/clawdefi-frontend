@@ -21,6 +21,7 @@ RUNTIME_FILES=(
   "scripts/wallet-sign.js"
   "scripts/wallet-sign-broadcast.js"
   "scripts/wallet-transfer.js"
+  "scripts/wallet-total-portfolio.js"
   "scripts/simulate-transaction.js"
   "scripts/swap-1inch.js"
   "scripts/query-protocol.js"

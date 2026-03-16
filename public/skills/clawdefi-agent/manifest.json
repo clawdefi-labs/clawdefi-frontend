@@ -1,18 +1,18 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "eb30e219d1abf35fdd684dd9c27f3e1da84db20f196312cccf4f810ff9c3f682",
+  "sha256": "379a57b113f54f190618833045b9eda6f3683e1f19cc9cea606cd871b991eb49",
   "files": [
     {
       "path": "scripts/install-raw.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/install-raw.sh",
-      "sha256": "3ad13e0af87e03d479c144c6ad57509ea5ccb110517be6602ce2eaaf042b72c0"
+      "sha256": "0d186129f691c349127a3439949f8ad7fee1a6ca06df4d6d5bd6c5cd0cb8f6dd"
     },
     {
       "path": "scripts/update-from-manifest.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/update-from-manifest.sh",
-      "sha256": "6f893d0a853101b8a8a00cb1f647eefdc75c5a4a9b19817714378230f61d0e71"
+      "sha256": "37f3a4e325f0478b309bb9333a533fd2b58abdf644f0d30df0dc9162d464df84"
     },
     {
       "path": "scripts/onboard.sh",
