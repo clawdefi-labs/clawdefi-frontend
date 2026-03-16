@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.67
+version: 0.1.68
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -752,11 +752,23 @@ Predictions rules:
 
 ### VII. Yield
 
-Yield module is intentionally placeholder-only for now.
-Not implemented yet.
+Yield currently ships with Pendle market discovery.
+Quote/build/simulate/execute remain placeholders for now.
+
+Implemented:
+- `yield_opportunities` (Pendle category-aware market discovery)
+
+```bash
+node {baseDir}/scripts/yield-opportunities.js --adapter pendle --chain ethereum-mainnet --categories stables,eth --min-liquidity-usd 500000 --sort-by implied-apy --sort-order desc --limit 20
+```
+
+Yield query notes:
+- categories are passed as comma-separated values (`stables`, `eth`, `btc`, `rwa`, `points`, `others`, etc),
+- if `--chain` / `--chain-id` is not provided, script uses wallet-selected chain when available; unsupported defaults fall back to Ethereum with warning,
+- add `--include-account true` to resolve the local WDK wallet address and include it in response context,
+- this module is WDK-compatible (wallet context resolution only); no remote signing/custody.
 
 Planned placeholder surface:
-- `yield_opportunities`
 - `yield_quote`
 - `yield_build`
 - `yield_simulate`
