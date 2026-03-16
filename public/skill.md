@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.64
+version: 0.1.66
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -347,18 +347,69 @@ node {baseDir}/scripts/query-token-audit.js --chain-id 56 --contract-address 0x5
 
 ### III. Swap
 
-Swap module is intentionally scaffolded first and will be expanded in the next pass.
+Swap is now backend-planned and local-signed.
 
-Current placeholder contract:
-- source of route/quote intelligence should come from ClawDeFi intel layer,
-- signing and execution must stay local through WDK wallet runtime,
-- backend must not become the signing/custody boundary.
+Current path:
+- quote and prepare are served by ClawDeFi backend (0x adapter),
+- backend returns normalized route + allowance + tx plans,
+- local WDK runtime signs/simulates/executes the tx requests.
 
-Planned module placeholders:
-- `swap_quote`
-- `swap_build`
-- `swap_simulate`
-- `swap_execute`
+Execution boundary:
+- backend must not become the signing/custody boundary,
+- approval and swap tx execution remain local.
+
+Current adapter support:
+- `0x`
+
+#### swap_quote
+Returns backend quote and route data.
+
+```bash
+node {baseDir}/scripts/swap-quote.js --adapter 0x --chain base-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --sell-amount 1000000000000000
+```
+
+Exact-out quote:
+
+```bash
+node {baseDir}/scripts/swap-quote.js --adapter 0x --chain base-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --buy-amount 1000000 --slippage-bps 100
+```
+
+#### swap_build
+Builds a deterministic local swap plan from backend prepare response.
+Requires local wallet context.
+
+```bash
+node {baseDir}/scripts/swap-build.js --adapter 0x --chain base-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --sell-amount 1000000000000000 --slippage-bps 100
+```
+
+With unlimited approval planning:
+
+```bash
+node {baseDir}/scripts/swap-build.js --adapter 0x --chain base-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --sell-amount 1000000000000000 --approval-mode unlimited --allow-unlimited true
+```
+
+#### swap_simulate
+Simulates planned approval + swap txs through local WDK quote path.
+
+```bash
+node {baseDir}/scripts/swap-simulate.js --adapter 0x --chain base-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --sell-amount 1000000000000000 --slippage-bps 100
+```
+
+#### swap_execute
+Executes planned approval + swap txs through local WDK signing path.
+
+```bash
+node {baseDir}/scripts/swap-execute.js --adapter 0x --chain base-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --sell-amount 1000000000000000 --slippage-bps 100 --confirm-execute true
+```
+
+Swap rules:
+- EVM only for now,
+- run `swap_simulate` before `swap_execute`,
+- require explicit `--confirm-execute true` before broadcasting,
+- if approval is required, execute approval first then swap,
+- `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
+- do not request seed phrase/private key in chat,
+- do not handcraft swap tx calldata in chat; use backend prepare output only.
 
 ### IV. Perps (Local Execution, Modular Adapters)
 
@@ -511,6 +562,8 @@ Perps rules:
 - before any referral bind action, explicitly state:
 `Benefit to you: trading fee discount (depends on Avantis referral tier).`
 `Benefit to ClawDeFi: referral fee rebate.`
+- canonical ClawDeFi referral beneficiary wallet:
+`0x25Aa761B02C45D2B57bBb54Dd04D42772afdd291`,
 - run simulate before execute for any fund-impacting action,
 - require explicit user intent before broadcasting,
 - use adapter-built tx requests only (do not handcraft tx payloads in chat),
@@ -606,19 +659,7 @@ Lending rules:
 - signed intent and tx request must remain WDK-compatible (`to`, `data`, bigint-safe value/fees),
 - never request seed phrase/private key in chat.
 
-### VI. Yield
-
-Yield module is intentionally placeholder-only for now.
-Not implemented yet.
-
-Planned placeholder surface:
-- `yield_opportunities`
-- `yield_quote`
-- `yield_build`
-- `yield_simulate`
-- `yield_execute`
-
-### VII. Predictions
+### VI. Predictions
 
 Predictions module is intentionally placeholder-only for now.
 Not implemented yet.
@@ -629,6 +670,18 @@ Planned placeholder surface:
 - `predictions_build`
 - `predictions_simulate`
 - `predictions_execute`
+
+### VII. Yield
+
+Yield module is intentionally placeholder-only for now.
+Not implemented yet.
+
+Planned placeholder surface:
+- `yield_opportunities`
+- `yield_quote`
+- `yield_build`
+- `yield_simulate`
+- `yield_execute`
 
 ### VIII. Options
 
