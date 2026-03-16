@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.54
+version: 0.1.55
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -45,6 +45,7 @@ This onboarding path:
 - installs `@tetherto/wdk`, `@tetherto/wdk-wallet-evm`, `@tetherto/wdk-wallet-solana`, WDK MCP toolkit (GitHub source), and `@modelcontextprotocol/sdk`,
 - scaffolds a local stdio MCP server with EVM, Solana, and pricing tools,
 - writes local config templates only,
+- preserves existing local `~/.openclaw/clawdefi/wdk-mcp/.env` if already present,
 - verifies that the local environment is ready.
 
 Wallet creation or seed import should happen later inside the wallet modules, not during onboarding.
@@ -56,6 +57,37 @@ Wallet flow should support both:
 Use a dedicated wallet seed for ClawDeFi. Do not use a main wallet seed phrase.
 
 ## D. Updating
+
+Use a versioned, manifest-driven update path only.
+
+Canonical update source:
+- `https://www.clawdefi.ai/skills/clawdefi-agent/manifest.json`
+
+Update rule:
+1. Read remote `manifest.json`.
+2. Compare remote `version` against local installed `SKILL.md` version.
+3. If remote is newer, run:
+```bash
+bash {baseDir}/scripts/update.sh
+```
+4. `update.sh` fetches and executes the published `update-from-manifest.sh`, then updates only:
+- `~/.openclaw/skills/clawdefi-agent/SKILL.md`
+- `~/.openclaw/skills/clawdefi-agent/scripts/*`
+5. Do not overwrite wallet secrets:
+- do not modify `~/.openclaw/clawdefi/wdk-mcp/.env`
+- do not rotate or rewrite `WDK_SEED`
+
+Optional WDK dependency behavior (opt-in only):
+- `CLAWDEFI_REFRESH_WDK_DEPS=1 bash {baseDir}/scripts/update.sh`
+  : refresh from lockfile (`npm ci`) without changing versions.
+- `CLAWDEFI_UPGRADE_WDK_DEPS=1 bash {baseDir}/scripts/update.sh`
+  : explicitly upgrade WDK dependencies.
+- `CLAWDEFI_RESTART_WDK_RUNTIME=1 bash {baseDir}/scripts/update.sh`
+  : best-effort restart of long-running local WDK runtime.
+
+Default posture:
+- do not auto-upgrade WDK dependency versions,
+- pin installed versions via local lockfile unless user explicitly opts into upgrade.
 
 ## E. Skill Action Model
 

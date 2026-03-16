@@ -9,6 +9,11 @@ ENV_EXAMPLE_FILE="${MCP_DIR}/.env.example"
 PACKAGE_FILE="${MCP_DIR}/package.json"
 INDEX_FILE="${MCP_DIR}/index.mjs"
 RUN_FILE="${MCP_DIR}/run.sh"
+MCP_SDK_SPEC="${MCP_SDK_SPEC:-@modelcontextprotocol/sdk@latest}"
+WDK_SPEC="${WDK_SPEC:-@tetherto/wdk@latest}"
+WDK_MCP_TOOLKIT_SPEC="${WDK_MCP_TOOLKIT_SPEC:-github:tetherto/wdk-mcp-toolkit}"
+WDK_WALLET_EVM_SPEC="${WDK_WALLET_EVM_SPEC:-@tetherto/wdk-wallet-evm@latest}"
+WDK_WALLET_SOLANA_SPEC="${WDK_WALLET_SOLANA_SPEC:-@tetherto/wdk-wallet-solana@latest}"
 
 require_bin() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -27,6 +32,9 @@ check_node_version() {
 }
 
 write_package_json() {
+  if [ -f "$PACKAGE_FILE" ]; then
+    return
+  fi
   cat >"$PACKAGE_FILE" <<'EOF'
 {
   "name": "clawdefi-wdk-mcp",
@@ -98,7 +106,8 @@ EOF
 
 write_env_files() {
   umask 077
-  cat >"$ENV_FILE" <<'EOF'
+  if [ ! -f "$ENV_FILE" ]; then
+    cat >"$ENV_FILE" <<'EOF'
 # Set this later during wallet setup.
 # WDK_SEED='twelve or twenty four word seed phrase here'
 CLAWDEFI_EVM_RPC_URL=https://rpc.mevblocker.io/fast
@@ -108,7 +117,8 @@ CLAWDEFI_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 # Optional:
 # WDK_INDEXER_API_KEY=
 EOF
-  chmod 600 "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+  fi
 
   cat >"$ENV_EXAMPLE_FILE" <<'EOF'
 WDK_SEED='twelve or twenty four word seed phrase here'
@@ -138,12 +148,17 @@ EOF
 }
 
 install_dependencies() {
-  npm --prefix "$MCP_DIR" install \
-    @modelcontextprotocol/sdk \
-    @tetherto/wdk \
-    github:tetherto/wdk-mcp-toolkit \
-    @tetherto/wdk-wallet-evm \
-    @tetherto/wdk-wallet-solana
+  if [ -f "${MCP_DIR}/package-lock.json" ]; then
+    npm --prefix "$MCP_DIR" ci --omit=dev
+    return
+  fi
+
+  npm --prefix "$MCP_DIR" install --save-exact \
+    "$MCP_SDK_SPEC" \
+    "$WDK_SPEC" \
+    "$WDK_MCP_TOOLKIT_SPEC" \
+    "$WDK_WALLET_EVM_SPEC" \
+    "$WDK_WALLET_SOLANA_SPEC"
 }
 
 boot_check() {
