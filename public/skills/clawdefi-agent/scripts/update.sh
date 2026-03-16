@@ -4,10 +4,10 @@ set -euo pipefail
 SKILL_NAME="${SKILL_NAME:-clawdefi-agent}"
 SKILLS_BASE_URL="${SKILLS_BASE_URL:-https://www.clawdefi.ai/skills}"
 MANIFEST_URL="${MANIFEST_URL:-${SKILLS_BASE_URL}/${SKILL_NAME}/manifest.json}"
-TARGET_ROOT="${TARGET_ROOT:-$HOME/.openclaw/skills}"
+OPENCLAW_STATE_DIR="${OPENCLAW_STATE_DIR:-$HOME/.openclaw}"
+TARGET_ROOT="${TARGET_ROOT:-${OPENCLAW_STATE_DIR}/skills}"
 TARGET_DIR="${TARGET_ROOT}/${SKILL_NAME}"
 TARGET_SKILL_FILE="${TARGET_DIR}/SKILL.md"
-OPENCLAW_STATE_DIR="${OPENCLAW_STATE_DIR:-$HOME/.openclaw}"
 MCP_DIR="${OPENCLAW_STATE_DIR}/clawdefi/wdk-mcp"
 
 # Optional knobs:
