@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.68
+version: 0.1.69
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -752,11 +752,18 @@ Predictions rules:
 
 ### VII. Yield
 
-Yield currently ships with Pendle market discovery.
-Quote/build/simulate/execute remain placeholders for now.
+Yield is local-first and adapter-based.
 
-Implemented:
-- `yield_opportunities` (Pendle category-aware market discovery)
+Current adapter:
+- `pendle`
+
+Execution model:
+- opportunity discovery and quote/build planning use Pendle APIs,
+- approval checks and transaction simulation/execution use local WDK runtime,
+- signing and custody stay local.
+
+#### yield_opportunities
+Discover Pendle opportunities with category and APY/liquidity filters.
 
 ```bash
 node {baseDir}/scripts/yield-opportunities.js --adapter pendle --chain ethereum-mainnet --categories stables,eth --min-liquidity-usd 500000 --sort-by implied-apy --sort-order desc --limit 20
@@ -768,11 +775,48 @@ Yield query notes:
 - add `--include-account true` to resolve the local WDK wallet address and include it in response context,
 - this module is WDK-compatible (wallet context resolution only); no remote signing/custody.
 
-Planned placeholder surface:
-- `yield_quote`
-- `yield_build`
-- `yield_simulate`
-- `yield_execute`
+#### yield_quote
+Get deterministic Pendle convert route + required approval context.
+
+```bash
+node {baseDir}/scripts/yield-quote.js --adapter pendle --chain base-mainnet --tokens-in 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amounts-in 1000000 --tokens-out 0x4df7d78766D1A7D4f6F49660fD5dD60B7d0cf4c6 --route-index 0 --slippage-bps 50
+```
+
+#### yield_build
+Build deterministic execution plan (approval steps + convert step) and intent hash.
+
+```bash
+node {baseDir}/scripts/yield-build.js --adapter pendle --chain base-mainnet --tokens-in 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amounts-in 1000000 --tokens-out 0x4df7d78766D1A7D4f6F49660fD5dD60B7d0cf4c6 --route-index 0 --approval-mode exact
+```
+
+Unlimited approval planning (explicit opt-in required):
+
+```bash
+node {baseDir}/scripts/yield-build.js --adapter pendle --chain base-mainnet --tokens-in 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amounts-in 1000000 --tokens-out 0x4df7d78766D1A7D4f6F49660fD5dD60B7d0cf4c6 --approval-mode unlimited --allow-unlimited true
+```
+
+#### yield_simulate
+Simulate each planned tx step locally (approval + convert) through WDK quote path.
+
+```bash
+node {baseDir}/scripts/yield-simulate.js --adapter pendle --chain base-mainnet --tokens-in 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amounts-in 1000000 --tokens-out 0x4df7d78766D1A7D4f6F49660fD5dD60B7d0cf4c6 --route-index 0 --approval-mode exact
+```
+
+#### yield_execute
+Execute each planned tx step locally via WDK signing + broadcast.
+Requires explicit execute confirmation.
+
+```bash
+node {baseDir}/scripts/yield-execute.js --adapter pendle --chain base-mainnet --tokens-in 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amounts-in 1000000 --tokens-out 0x4df7d78766D1A7D4f6F49660fD5dD60B7d0cf4c6 --route-index 0 --approval-mode exact --confirm-execute true
+```
+
+Yield rules:
+- EVM only for now (Pendle-supported chains),
+- run `yield_simulate` before `yield_execute`,
+- execution requires explicit `--confirm-execute true`,
+- `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
+- use adapter-built tx requests only; do not handcraft calldata in chat,
+- do not request seed phrase/private key in chat.
 
 ### VIII. Options
 
