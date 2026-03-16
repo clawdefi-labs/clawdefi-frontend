@@ -1,8 +1,8 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.63",
+  "version": "0.1.64",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "247fbbaa38b34868a1b24e076c403a463536ffd120d444e40746a2f0eac1f906",
+  "sha256": "671d33c60976ca5973a1433d1de76e49f4edff58e902bba60b4c7d38ab9ee2e9",
   "files": [
     {
       "path": "scripts/install-raw.sh",

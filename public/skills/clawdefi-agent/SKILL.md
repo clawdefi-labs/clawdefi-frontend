@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.63
+version: 0.1.64
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -522,15 +522,89 @@ Perps rules:
 
 ### V. Lending
 
-Lending module is intentionally placeholder-only for now.
-Not implemented yet.
+Lending is local-first and adapter-based.
 
-Planned placeholder surface:
-- `lending_markets`
-- `lending_quote`
-- `lending_build`
-- `lending_simulate`
-- `lending_execute`
+- current adapter: `aave` (manual local adapter, no added lending package dependency),
+- signing/simulation/execution stays local through WDK wallet runtime,
+- adapter interface is stable so future lending protocols can be added without changing wallet flow.
+
+Use `--adapter aave` explicitly for deterministic behavior.
+
+#### lending_markets
+List supported markets:
+
+```bash
+node {baseDir}/scripts/lending-markets.js --adapter aave
+```
+
+List chain-specific market details:
+
+```bash
+node {baseDir}/scripts/lending-markets.js --adapter aave --chain base-mainnet
+```
+
+Include selected wallet account snapshot:
+
+```bash
+node {baseDir}/scripts/lending-markets.js --adapter aave --chain base-mainnet --include-account true
+```
+
+#### lending_quote
+Generate a deterministic local quote preview for an action.
+
+Supply example:
+
+```bash
+node {baseDir}/scripts/lending-quote.js --adapter aave --chain base-mainnet --action supply --token 0x4200000000000000000000000000000000000006 --amount 10000000000000000
+```
+
+Borrow example:
+
+```bash
+node {baseDir}/scripts/lending-quote.js --adapter aave --chain base-mainnet --action borrow --token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amount 5000000
+```
+
+#### lending_build
+Build deterministic intent and tx request from adapter output.
+
+```bash
+node {baseDir}/scripts/lending-build.js --adapter aave --chain base-mainnet --action repay --token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amount 5000000
+```
+
+Set collateral usage:
+
+```bash
+node {baseDir}/scripts/lending-build.js --adapter aave --chain base-mainnet --action set-collateral --token 0x4200000000000000000000000000000000000006 --use-as-collateral true
+```
+
+Set E-Mode category:
+
+```bash
+node {baseDir}/scripts/lending-build.js --adapter aave --chain base-mainnet --action set-emode --category-id 1
+```
+
+#### lending_simulate
+Simulate a built lending action via local wallet quote path.
+
+```bash
+node {baseDir}/scripts/lending-simulate.js --adapter aave --chain base-mainnet --action withdraw --token 0x4200000000000000000000000000000000000006 --amount 10000000000000000
+```
+
+#### lending_execute
+Execute a built lending action via local wallet signing + broadcast path.
+
+```bash
+node {baseDir}/scripts/lending-execute.js --adapter aave --chain base-mainnet --action supply --token 0x4200000000000000000000000000000000000006 --amount 10000000000000000
+```
+
+Lending rules:
+- EVM only for now,
+- run simulate before execute for fund-impacting actions,
+- for `supply` and `repay`, verify allowance first and set allowance when needed,
+- require explicit user intent before broadcasting,
+- use adapter-built tx requests only (do not handcraft calldata in chat),
+- signed intent and tx request must remain WDK-compatible (`to`, `data`, bigint-safe value/fees),
+- never request seed phrase/private key in chat.
 
 ### VI. Yield
 
