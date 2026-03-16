@@ -24,6 +24,7 @@ WDK_MCP_TOOLKIT_SPEC="${WDK_MCP_TOOLKIT_SPEC:-github:tetherto/wdk-mcp-toolkit}"
 WDK_WALLET_EVM_SPEC="${WDK_WALLET_EVM_SPEC:-@tetherto/wdk-wallet-evm@latest}"
 WDK_WALLET_SOLANA_SPEC="${WDK_WALLET_SOLANA_SPEC:-@tetherto/wdk-wallet-solana@latest}"
 AVANTIS_TRADER_SDK_SPEC="${AVANTIS_TRADER_SDK_SPEC:-avantis-trader-sdk@1.0.0}"
+POLYMARKET_CLOB_CLIENT_SPEC="${POLYMARKET_CLOB_CLIENT_SPEC:-@polymarket/clob-client@latest}"
 
 ensure_required_runtime_modules() {
   local missing=0
@@ -33,7 +34,8 @@ ensure_required_runtime_modules() {
     "@tetherto/wdk-mcp-toolkit" \
     "@tetherto/wdk-wallet-evm" \
     "@tetherto/wdk-wallet-solana" \
-    "avantis-trader-sdk"; do
+    "avantis-trader-sdk" \
+    "@polymarket/clob-client"; do
     if ! node -e "require.resolve('${module}', { paths: ['${MCP_DIR}'] })" >/dev/null 2>&1; then
       missing=1
       break
@@ -48,7 +50,22 @@ ensure_required_runtime_modules() {
       "$WDK_MCP_TOOLKIT_SPEC" \
       "$WDK_WALLET_EVM_SPEC" \
       "$WDK_WALLET_SOLANA_SPEC" \
-      "$AVANTIS_TRADER_SDK_SPEC"
+      "$AVANTIS_TRADER_SDK_SPEC" \
+      "$POLYMARKET_CLOB_CLIENT_SPEC"
+  fi
+}
+
+ensure_runtime_env_defaults() {
+  local env_file="${MCP_DIR}/.env"
+  if [ ! -f "$env_file" ]; then
+    return
+  fi
+
+  if ! grep -q '^CLAWDEFI_POLYGON_RPC_URL=' "$env_file"; then
+    printf '%s\n' 'CLAWDEFI_POLYGON_RPC_URL=https://polygon-bor-rpc.publicnode.com' >>"$env_file"
+  fi
+  if ! grep -q '^CLAWDEFI_AMOY_RPC_URL=' "$env_file"; then
+    printf '%s\n' 'CLAWDEFI_AMOY_RPC_URL=https://rpc-amoy.polygon.technology' >>"$env_file"
   fi
 }
 
@@ -96,7 +113,8 @@ refresh_wdk_runtime_deps() {
       "$WDK_MCP_TOOLKIT_SPEC" \
       "$WDK_WALLET_EVM_SPEC" \
       "$WDK_WALLET_SOLANA_SPEC" \
-      "$AVANTIS_TRADER_SDK_SPEC"
+      "$AVANTIS_TRADER_SDK_SPEC" \
+      "$POLYMARKET_CLOB_CLIENT_SPEC"
   elif [ "$CLAWDEFI_REFRESH_WDK_DEPS" = "1" ]; then
     if [ -f "${MCP_DIR}/package-lock.json" ]; then
       echo "Refreshing local WDK dependencies from lockfile."
@@ -107,6 +125,7 @@ refresh_wdk_runtime_deps() {
   fi
 
   ensure_required_runtime_modules
+  ensure_runtime_env_defaults
 }
 
 restart_wdk_runtime_if_requested() {

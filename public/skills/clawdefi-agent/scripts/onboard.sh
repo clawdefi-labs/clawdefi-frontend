@@ -15,6 +15,7 @@ WDK_MCP_TOOLKIT_SPEC="${WDK_MCP_TOOLKIT_SPEC:-github:tetherto/wdk-mcp-toolkit}"
 WDK_WALLET_EVM_SPEC="${WDK_WALLET_EVM_SPEC:-@tetherto/wdk-wallet-evm@latest}"
 WDK_WALLET_SOLANA_SPEC="${WDK_WALLET_SOLANA_SPEC:-@tetherto/wdk-wallet-solana@latest}"
 AVANTIS_TRADER_SDK_SPEC="${AVANTIS_TRADER_SDK_SPEC:-avantis-trader-sdk@1.0.0}"
+POLYMARKET_CLOB_CLIENT_SPEC="${POLYMARKET_CLOB_CLIENT_SPEC:-@polymarket/clob-client@latest}"
 
 ensure_required_runtime_modules() {
   local missing=0
@@ -24,7 +25,8 @@ ensure_required_runtime_modules() {
     "@tetherto/wdk-mcp-toolkit" \
     "@tetherto/wdk-wallet-evm" \
     "@tetherto/wdk-wallet-solana" \
-    "avantis-trader-sdk"; do
+    "avantis-trader-sdk" \
+    "@polymarket/clob-client"; do
     if ! node -e "require.resolve('${module}', { paths: ['${MCP_DIR}'] })" >/dev/null 2>&1; then
       missing=1
       break
@@ -38,7 +40,8 @@ ensure_required_runtime_modules() {
       "$WDK_MCP_TOOLKIT_SPEC" \
       "$WDK_WALLET_EVM_SPEC" \
       "$WDK_WALLET_SOLANA_SPEC" \
-      "$AVANTIS_TRADER_SDK_SPEC"
+      "$AVANTIS_TRADER_SDK_SPEC" \
+      "$POLYMARKET_CLOB_CLIENT_SPEC"
   fi
 }
 
@@ -140,6 +143,8 @@ write_env_files() {
 CLAWDEFI_EVM_RPC_URL=https://rpc.mevblocker.io/fast
 CLAWDEFI_BASE_RPC_URL=https://mainnet.base.org
 CLAWDEFI_BSC_RPC_URL=https://bsc-dataseed.binance.org
+CLAWDEFI_POLYGON_RPC_URL=https://polygon-bor-rpc.publicnode.com
+CLAWDEFI_AMOY_RPC_URL=https://rpc-amoy.polygon.technology
 CLAWDEFI_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 # Optional:
 # WDK_INDEXER_API_KEY=
@@ -152,6 +157,8 @@ WDK_SEED='twelve or twenty four word seed phrase here'
 CLAWDEFI_EVM_RPC_URL=https://rpc.mevblocker.io/fast
 CLAWDEFI_BASE_RPC_URL=https://mainnet.base.org
 CLAWDEFI_BSC_RPC_URL=https://bsc-dataseed.binance.org
+CLAWDEFI_POLYGON_RPC_URL=https://polygon-bor-rpc.publicnode.com
+CLAWDEFI_AMOY_RPC_URL=https://rpc-amoy.polygon.technology
 CLAWDEFI_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 # Optional:
 # WDK_INDEXER_API_KEY=

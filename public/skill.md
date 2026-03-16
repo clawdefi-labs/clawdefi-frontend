@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.66
+version: 0.1.67
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -661,15 +661,94 @@ Lending rules:
 
 ### VI. Predictions
 
-Predictions module is intentionally placeholder-only for now.
-Not implemented yet.
+Predictions execution is local-first and adapter-based.
 
-Planned placeholder surface:
-- `predictions_markets`
-- `predictions_quote`
-- `predictions_build`
-- `predictions_simulate`
-- `predictions_execute`
+Current adapter:
+- `polymarket`
+
+Architecture split:
+- `Gamma` is discovery/metadata (market catalog, outcomes, status, slugs, condition IDs, CLOB token IDs),
+- `CLOB` is trading (orderbook, quotes, signed order submission, open orders, fills).
+
+ID model:
+- `marketId` and `slug` come from Gamma,
+- `conditionId` is market identity on CLOB side,
+- `tradeTokenId` (CLOB token ID) is the outcome token used for order placement,
+- `orderId` / trade fills are returned by CLOB after submission.
+
+Local signing and authority boundary:
+- order signing stays local through WDK wallet,
+- CLOB API authentication is derived locally (API key/secret/passphrase),
+- no backend custody/signing path is used for predictions execution.
+
+#### predictions_markets
+Discover and resolve markets through Gamma (with CLOB cross-resolution when needed).
+
+List:
+
+```bash
+node {baseDir}/scripts/predictions-markets.js --adapter polymarket --mode list --limit 25 --active true --closed false
+```
+
+Search:
+
+```bash
+node {baseDir}/scripts/predictions-markets.js --adapter polymarket --mode search --query election --limit 50
+```
+
+Get by slug:
+
+```bash
+node {baseDir}/scripts/predictions-markets.js --adapter polymarket --mode get --slug will-bitcoin-hit-150k-in-2026
+```
+
+#### predictions_quote
+Resolve market/outcome -> `tradeTokenId`, then fetch CLOB quote context (book/mid/spread/tick/negRisk).
+
+Limit quote context:
+
+```bash
+node {baseDir}/scripts/predictions-quote.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome yes --side buy --order-kind limit --price 0.45 --size 20
+```
+
+Market quote context:
+
+```bash
+node {baseDir}/scripts/predictions-quote.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome no --side sell --order-kind market --amount 15 --order-type FOK
+```
+
+#### predictions_build
+Build deterministic signed order intent locally (EIP-712 signed order, not yet posted).
+Includes approval plan for collateral/operator setup.
+
+```bash
+node {baseDir}/scripts/predictions-build.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome yes --side buy --order-kind limit --price 0.45 --size 20 --order-type GTC
+```
+
+#### predictions_simulate
+Simulate any required on-chain approval tx steps via local WDK quote path.
+Order submission itself is off-chain CLOB posting and is not on-chain simulated.
+
+```bash
+node {baseDir}/scripts/predictions-simulate.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome yes --side buy --order-kind market --amount 25 --order-type FOK
+```
+
+#### predictions_execute
+Execute approval steps locally (if required), then submit signed order to CLOB.
+Requires explicit execute confirmation.
+
+```bash
+node {baseDir}/scripts/predictions-execute.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome yes --side buy --order-kind market --amount 25 --order-type FOK --confirm-execute true
+```
+
+Predictions rules:
+- Polygon EVM path only for now (`polygon-pos`, optional `polygon-amoy` support path),
+- always resolve outcome to a deterministic `tradeTokenId` before order actions,
+- if `--signature-type` is `poly-proxy` or `poly-gnosis-safe`, `--funder-address` is required,
+- run `predictions_simulate` before `predictions_execute` for fund-impacting actions,
+- `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
+- execution requires explicit `--confirm-execute true`,
+- do not request seed phrase/private key in chat.
 
 ### VII. Yield
 

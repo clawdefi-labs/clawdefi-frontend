@@ -40,6 +40,39 @@ const CHAIN_ALIASES = {
   avax: 'avax-mainnet'
 }
 
+const CHAIN_DEFAULT_RPC = {
+  'ethereum-mainnet': {
+    envKeys: ['CLAWDEFI_EVM_RPC_URL'],
+    fallback: 'https://rpc.mevblocker.io/fast',
+    nativeSymbol: 'ETH',
+    name: 'Ethereum'
+  },
+  'base-mainnet': {
+    envKeys: ['CLAWDEFI_BASE_RPC_URL'],
+    fallback: 'https://mainnet.base.org',
+    nativeSymbol: 'ETH',
+    name: 'Base'
+  },
+  'bnb-smart-chain': {
+    envKeys: ['CLAWDEFI_BSC_RPC_URL'],
+    fallback: 'https://bsc-dataseed.binance.org',
+    nativeSymbol: 'BNB',
+    name: 'BNB Smart Chain'
+  },
+  'polygon-pos': {
+    envKeys: ['CLAWDEFI_POLYGON_RPC_URL'],
+    fallback: 'https://polygon-bor-rpc.publicnode.com',
+    nativeSymbol: 'POL',
+    name: 'Polygon PoS'
+  },
+  'polygon-amoy': {
+    envKeys: ['CLAWDEFI_AMOY_RPC_URL'],
+    fallback: 'https://rpc-amoy.polygon.technology',
+    nativeSymbol: 'POL',
+    name: 'Polygon Amoy'
+  }
+}
+
 function printJson (payload) {
   process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`)
 }
@@ -313,18 +346,51 @@ async function callChainRegistry (selector, intent = 'read') {
 async function resolveExecutionContext (chain, intent = 'read') {
   const normalized = String(chain || '').trim().toLowerCase()
   if (!normalized || normalized === 'solana') {
+    const env = await readEnvMap()
     return {
       family: 'solana',
       chainSlug: 'solana',
       chainId: null,
-      rpcUrl: process.env.CLAWDEFI_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+      rpcUrl: env.CLAWDEFI_SOLANA_RPC_URL || process.env.CLAWDEFI_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
       nativeSymbol: 'SOL',
       name: 'Solana'
     }
   }
 
   const selector = parseChainSelector(normalized)
-  return callChainRegistry(selector, intent)
+  const env = await readEnvMap()
+  const localConfig = selector.chainSlug ? CHAIN_DEFAULT_RPC[selector.chainSlug] : null
+  if (localConfig) {
+    const override = localConfig.envKeys
+      .map((key) => env[key] || process.env[key] || '')
+      .find(Boolean)
+    if (override) {
+      return {
+        family: 'evm',
+        chainSlug: selector.chainSlug,
+        chainId: selector.chainId || null,
+        rpcUrl: override,
+        nativeSymbol: localConfig.nativeSymbol || null,
+        name: localConfig.name || null
+      }
+    }
+  }
+
+  try {
+    return await callChainRegistry(selector, intent)
+  } catch {
+    if (localConfig) {
+      return {
+        family: 'evm',
+        chainSlug: selector.chainSlug,
+        chainId: selector.chainId || null,
+        rpcUrl: localConfig.fallback,
+        nativeSymbol: localConfig.nativeSymbol || null,
+        name: localConfig.name || null
+      }
+    }
+    throw new Error(`Unable to resolve execution context for chain ${normalized}.`)
+  }
 }
 
 async function buildManager (target, seed, options = {}) {
