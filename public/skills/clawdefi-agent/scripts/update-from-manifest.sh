@@ -9,27 +9,6 @@ OPENCLAW_STATE_DIR="${OPENCLAW_STATE_DIR:-$HOME/.openclaw}"
 TARGET_ROOT="${TARGET_ROOT:-${OPENCLAW_STATE_DIR}/skills}"
 TARGET_DIR="${TARGET_ROOT}/${SKILL_NAME}"
 TARGET_FILE="${TARGET_DIR}/SKILL.md"
-RUNTIME_FILES=(
-  "scripts/onboard.sh"
-  "scripts/update.sh"
-  "scripts/wallet-common.js"
-  "scripts/wallet-create.js"
-  "scripts/wallet-import.js"
-  "scripts/wallet-discover.js"
-  "scripts/wallet-select.js"
-  "scripts/wallet-balance.js"
-  "scripts/wallet-sign.js"
-  "scripts/wallet-sign-broadcast.js"
-  "scripts/wallet-transfer.js"
-  "scripts/wallet-total-portfolio.js"
-  "scripts/simulate-transaction.js"
-  "scripts/swap-1inch.js"
-  "scripts/query-protocol.js"
-  "scripts/query-coingecko.js"
-  "scripts/query-avantis.js"
-  "scripts/query-pyth.js"
-  "scripts/query-contract-verification.js"
-)
 
 auth_curl() {
   if [ -n "$SKILLS_AUTH_TOKEN" ]; then
@@ -107,8 +86,14 @@ fi
 runtime_changed_any=0
 runtime_results=()
 
-for runtime_file in "${RUNTIME_FILES[@]}"; do
-  runtime_tmp="${tmp_dir}/$(basename "$runtime_file")"
+mapfile -t runtime_files < <(jq -r '.files[]?.path // empty' "$manifest_tmp")
+if [ "${#runtime_files[@]}" -eq 0 ]; then
+  echo "Manifest contains no runtime files to update." >&2
+  exit 1
+fi
+
+for runtime_file in "${runtime_files[@]}"; do
+  runtime_tmp="${tmp_dir}/$(echo "$runtime_file" | tr '/:' '__')"
   runtime_target="${TARGET_DIR}/${runtime_file}"
   runtime_url="$(jq -r --arg p "$runtime_file" '.files[]? | select(.path == $p) | .url // empty' "$manifest_tmp" | head -n 1)"
   runtime_sha256="$(jq -r --arg p "$runtime_file" '.files[]? | select(.path == $p) | .sha256 // empty' "$manifest_tmp" | head -n 1)"
@@ -143,7 +128,9 @@ for runtime_file in "${RUNTIME_FILES[@]}"; do
     mkdir -p "$(dirname "$runtime_target")"
     backup_if_exists "$runtime_target"
     mv "$runtime_tmp" "$runtime_target"
-    chmod +x "$runtime_target"
+    if [[ "$runtime_target" == *.sh ]]; then
+      chmod +x "$runtime_target"
+    fi
     runtime_changed_any=1
     runtime_results+=("${runtime_file}=updated")
   else

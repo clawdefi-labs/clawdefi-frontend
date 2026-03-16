@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.57
+version: 0.1.62
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -42,7 +42,7 @@ bash {baseDir}/scripts/onboard.sh
 This onboarding path:
 - checks `node`, `npm`, and `openclaw`,
 - creates a local WDK MCP runtime at `~/.openclaw/clawdefi/wdk-mcp`,
-- installs `@tetherto/wdk`, `@tetherto/wdk-wallet-evm`, `@tetherto/wdk-wallet-solana`, WDK MCP toolkit (GitHub source), and `@modelcontextprotocol/sdk`,
+- installs `@tetherto/wdk`, `@tetherto/wdk-wallet-evm`, `@tetherto/wdk-wallet-solana`, WDK MCP toolkit (GitHub source), `@modelcontextprotocol/sdk`, and `avantis-trader-sdk`,
 - scaffolds a local stdio MCP server with EVM, Solana, and pricing tools,
 - writes local config templates only,
 - preserves existing local `~/.openclaw/clawdefi/wdk-mcp/.env` if already present,
@@ -216,9 +216,265 @@ Token transfer:
 node {baseDir}/scripts/wallet-transfer.js --chain ethereum-mainnet --token 0xdAC17F958D2ee523a2206206994597C13D831ec7 --recipient 0xabc --amount 1000000
 ```
 
+#### Check Token Allowance (EVM)
+Use to read current ERC20 allowance for spender on selected EVM chain.
+
+```bash
+node {baseDir}/scripts/wallet-token-allowance-check.js --chain base-mainnet --token 0xdAC17F958D2ee523a2206206994597C13D831ec7 --spender 0xabcabcabcabcabcabcabcabcabcabcabcabcabca
+```
+
+#### Set Token Allowance (EVM)
+Use to set allowance via local signing runtime.
+
+Dry-run exact allowance:
+
+```bash
+node {baseDir}/scripts/wallet-token-allowance-set.js --chain base-mainnet --token 0xdAC17F958D2ee523a2206206994597C13D831ec7 --spender 0xabcabcabcabcabcabcabcabcabcabcabcabcabca --mode exact --amount 1000000 --dry-run
+```
+
+Execute revoke:
+
+```bash
+node {baseDir}/scripts/wallet-token-allowance-set.js --chain base-mainnet --token 0xdAC17F958D2ee523a2206206994597C13D831ec7 --spender 0xabcabcabcabcabcabcabcabcabcabcabcabcabca --mode revoke
+```
+
+Execute unlimited (explicit flag required):
+
+```bash
+node {baseDir}/scripts/wallet-token-allowance-set.js --chain base-mainnet --token 0xdAC17F958D2ee523a2206206994597C13D831ec7 --spender 0xabcabcabcabcabcabcabcabcabcabcabcabcabca --mode unlimited --allow-unlimited true
+```
+
 Wallet rules:
 - wallet custody stays local,
 - do not ask users to paste seed phrases into chat,
 - do not fabricate wallet addresses, balances, hashes, or signatures,
 - prefer quote paths before fund-impacting execution,
 - use a dedicated wallet seed for ClawDeFi, not a main wallet seed.
+
+### II. Market Intelligence
+
+Market intel modules are split into three paths:
+- direct local scripts for source-native reads (`query_coingecko`, `query_pyth`, `query_pyth_stream_*`, `query_avantis`, `query_contract_verification`),
+- ClawDeFi backend intel endpoint for Binance/OKX-style reads (`query_token_info`, `query_address_info`, `crypto_market_rank`, `trading_signal`, `meme_rush`, `query_token_audit`),
+- ClawDeFi backend chain context endpoint for RPC/explorer intelligence (`query_chain_registry`).
+
+Do not route these through the old MCP plugin workflow.
+
+Direct local market intel modules:
+
+#### query_coingecko
+```bash
+node {baseDir}/scripts/query-coingecko.js simple-price --ids ethereum,bitcoin --vs-currencies usd --json
+```
+
+#### query_pyth
+```bash
+node {baseDir}/scripts/query-pyth.js latest --feed-ids 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace --json
+```
+
+#### query_pyth_stream_open
+```bash
+node {baseDir}/scripts/query-pyth-stream-open.js --feed-ids 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
+```
+
+#### query_pyth_stream_poll
+```bash
+node {baseDir}/scripts/query-pyth-stream-poll.js --session-id <session_id> --cursor 0 --limit 20
+```
+
+#### query_pyth_stream_close
+```bash
+node {baseDir}/scripts/query-pyth-stream-close.js --session-id <session_id>
+```
+
+Pyth stream behavior note:
+- `query_pyth_stream_open` starts a local background stream collector.
+- `query_pyth_stream_poll` reads buffered events incrementally using `cursor`.
+- This is stream-to-buffer polling (agent pull model), not direct push callbacks into chat.
+
+#### query_avantis
+```bash
+node {baseDir}/scripts/query-avantis.js health --json
+```
+
+#### query_contract_verification
+```bash
+node {baseDir}/scripts/query-contract-verification.js --chain-id 8453 --contract-address 0x940181a94A35A4569E4529A3CDfB74e38FD98631 --json
+```
+
+#### query_chain_registry
+```bash
+node {baseDir}/scripts/query-chain-registry.js --chain base-mainnet --intent read
+```
+
+```bash
+node {baseDir}/scripts/query-chain-registry.js --chain-id 8453 --intent simulate
+```
+
+Backend-routed market intel modules (ClawDeFi endpoint):
+- endpoint: `POST /api/v1/intel/market/query`
+- script wrappers below call ClawDeFi backend directly and return normalized ClawDeFi intel payload.
+
+#### query_token_info
+```bash
+node {baseDir}/scripts/query-token-info.js --mode search --keyword usdc --chain-ids 56,8453,CT_501
+```
+
+#### query_address_info
+```bash
+node {baseDir}/scripts/query-address-info.js --address 0x0000000000000000000000000000000000000001 --chain-id 56 --offset 0
+```
+
+#### crypto_market_rank
+```bash
+node {baseDir}/scripts/crypto-market-rank.js --mode unified --chain-id 56 --rank-type 10 --period 50 --size 20
+```
+
+#### trading_signal
+```bash
+node {baseDir}/scripts/trading-signal.js --chain-id CT_501 --page 1 --page-size 50
+```
+
+#### meme_rush
+```bash
+node {baseDir}/scripts/meme-rush.js --mode rank-list --chain-id CT_501 --rank-type 10 --limit 20
+```
+
+#### query_token_audit
+```bash
+node {baseDir}/scripts/query-token-audit.js --chain-id 56 --contract-address 0x55d398326f99059ff775485246999027b3197955
+```
+
+### III. Perps (Local Execution, Modular Adapters)
+
+Perps execution is local-first:
+- market context and quotes use adapter data,
+- transaction build returns deterministic intent + tx request,
+- signing/simulation/broadcast stays local through WDK.
+
+Do not use backend custody/signing for perps execution.
+
+Adapter model:
+- each venue is an adapter (`--adapter <slug>`),
+- current adapter: `avantis`,
+- future venues should implement the same action contracts without changing wallet/signing flow.
+
+Current venue support:
+- `avantis` on `base-mainnet`.
+
+#### perps_market_context
+```bash
+node {baseDir}/scripts/perps-market-context.js --adapter avantis --chain base-mainnet --market ETH/USD
+```
+
+#### perps_position_list
+Use active selected local wallet:
+
+```bash
+node {baseDir}/scripts/perps-position-list.js --adapter avantis --chain base-mainnet
+```
+
+Use explicit address:
+
+```bash
+node {baseDir}/scripts/perps-position-list.js --adapter avantis --address 0xabc --chain base-mainnet
+```
+
+#### perps_pending_orders
+```bash
+node {baseDir}/scripts/perps-pending-orders.js --adapter avantis --chain base-mainnet
+```
+
+#### perps_open_quote
+```bash
+node {baseDir}/scripts/perps-open-quote.js --adapter avantis --chain base-mainnet --market ETH/USD --side long --collateral-usd 100 --leverage 3
+```
+
+#### perps_open_build
+```bash
+node {baseDir}/scripts/perps-open-build.js --adapter avantis --chain base-mainnet --market ETH/USD --side long --collateral-usd 100 --leverage 3 --take-profit 2400 --stop-loss 1700
+```
+
+#### perps_open_simulate
+```bash
+node {baseDir}/scripts/perps-open-simulate.js --adapter avantis --chain base-mainnet --market ETH/USD --side long --collateral-usd 100 --leverage 3 --take-profit 2400 --stop-loss 1700
+```
+
+#### perps_open_execute
+```bash
+node {baseDir}/scripts/perps-open-execute.js --adapter avantis --chain base-mainnet --market ETH/USD --side long --collateral-usd 100 --leverage 3 --take-profit 2400 --stop-loss 1700
+```
+
+#### perps_close_quote
+```bash
+node {baseDir}/scripts/perps-close-quote.js --adapter avantis --chain base-mainnet --position-id 12:0 --size-percent 50
+```
+
+#### perps_close_build
+```bash
+node {baseDir}/scripts/perps-close-build.js --adapter avantis --chain base-mainnet --position-id 12:0 --size-percent 50
+```
+
+#### perps_close_simulate
+```bash
+node {baseDir}/scripts/perps-close-simulate.js --adapter avantis --chain base-mainnet --position-id 12:0 --size-percent 50
+```
+
+#### perps_close_execute
+```bash
+node {baseDir}/scripts/perps-close-execute.js --adapter avantis --chain base-mainnet --position-id 12:0 --size-percent 50
+```
+
+#### perps_risk_orders_build
+```bash
+node {baseDir}/scripts/perps-risk-orders-build.js --adapter avantis --chain base-mainnet --position-id 12:0 --take-profit 2600 --stop-loss 1700
+```
+
+#### perps_risk_orders_simulate
+```bash
+node {baseDir}/scripts/perps-risk-orders-simulate.js --adapter avantis --chain base-mainnet --position-id 12:0 --take-profit 2600 --stop-loss 1700
+```
+
+#### perps_risk_orders_execute
+```bash
+node {baseDir}/scripts/perps-risk-orders-execute.js --adapter avantis --chain base-mainnet --position-id 12:0 --take-profit 2600 --stop-loss 1700
+```
+
+#### perps_modify_position_build
+```bash
+node {baseDir}/scripts/perps-modify-position-build.js --adapter avantis --chain base-mainnet --position-id 12:0 --update-type deposit --margin-delta-usd 25
+```
+
+#### perps_modify_position_simulate
+```bash
+node {baseDir}/scripts/perps-modify-position-simulate.js --adapter avantis --chain base-mainnet --position-id 12:0 --update-type withdraw --margin-delta-usd 10
+```
+
+#### perps_modify_position_execute
+```bash
+node {baseDir}/scripts/perps-modify-position-execute.js --adapter avantis --chain base-mainnet --position-id 12:0 --update-type deposit --margin-delta-usd 25
+```
+
+#### perps_cancel_order_build
+```bash
+node {baseDir}/scripts/perps-cancel-order-build.js --adapter avantis --chain base-mainnet --order-id 12:1
+```
+
+#### perps_cancel_order_simulate
+```bash
+node {baseDir}/scripts/perps-cancel-order-simulate.js --adapter avantis --chain base-mainnet --order-id 12:1
+```
+
+#### perps_cancel_order_execute
+```bash
+node {baseDir}/scripts/perps-cancel-order-execute.js --adapter avantis --chain base-mainnet --order-id 12:1
+```
+
+Perps rules:
+- EVM only for now,
+- run simulate before execute for any fund-impacting action,
+- require explicit user intent before broadcasting,
+- use adapter-built tx requests only (do not handcraft tx payloads in chat),
+- signed intent and tx request must remain WDK-compatible (`to`, `data`, and bigint-safe value/fees),
+- position/order actions require a real open position or pending order; use `perps_position_list` / `perps_pending_orders` first,
+- never request seed phrase/private key in chat.

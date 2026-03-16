@@ -23,6 +23,34 @@ WDK_SPEC="${WDK_SPEC:-@tetherto/wdk@latest}"
 WDK_MCP_TOOLKIT_SPEC="${WDK_MCP_TOOLKIT_SPEC:-github:tetherto/wdk-mcp-toolkit}"
 WDK_WALLET_EVM_SPEC="${WDK_WALLET_EVM_SPEC:-@tetherto/wdk-wallet-evm@latest}"
 WDK_WALLET_SOLANA_SPEC="${WDK_WALLET_SOLANA_SPEC:-@tetherto/wdk-wallet-solana@latest}"
+AVANTIS_TRADER_SDK_SPEC="${AVANTIS_TRADER_SDK_SPEC:-avantis-trader-sdk@1.0.0}"
+
+ensure_required_runtime_modules() {
+  local missing=0
+  for module in \
+    "@modelcontextprotocol/sdk" \
+    "@tetherto/wdk" \
+    "@tetherto/wdk-mcp-toolkit" \
+    "@tetherto/wdk-wallet-evm" \
+    "@tetherto/wdk-wallet-solana" \
+    "avantis-trader-sdk"; do
+    if ! node -e "require.resolve('${module}', { paths: ['${MCP_DIR}'] })" >/dev/null 2>&1; then
+      missing=1
+      break
+    fi
+  done
+
+  if [ "$missing" -eq 1 ]; then
+    echo "Installing missing local WDK runtime dependencies."
+    npm --prefix "$MCP_DIR" install --save-exact \
+      "$MCP_SDK_SPEC" \
+      "$WDK_SPEC" \
+      "$WDK_MCP_TOOLKIT_SPEC" \
+      "$WDK_WALLET_EVM_SPEC" \
+      "$WDK_WALLET_SOLANA_SPEC" \
+      "$AVANTIS_TRADER_SDK_SPEC"
+  fi
+}
 
 require_bin() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -67,11 +95,9 @@ refresh_wdk_runtime_deps() {
       "$WDK_SPEC" \
       "$WDK_MCP_TOOLKIT_SPEC" \
       "$WDK_WALLET_EVM_SPEC" \
-      "$WDK_WALLET_SOLANA_SPEC"
-    return
-  fi
-
-  if [ "$CLAWDEFI_REFRESH_WDK_DEPS" = "1" ]; then
+      "$WDK_WALLET_SOLANA_SPEC" \
+      "$AVANTIS_TRADER_SDK_SPEC"
+  elif [ "$CLAWDEFI_REFRESH_WDK_DEPS" = "1" ]; then
     if [ -f "${MCP_DIR}/package-lock.json" ]; then
       echo "Refreshing local WDK dependencies from lockfile."
       npm --prefix "$MCP_DIR" ci --omit=dev
@@ -79,6 +105,8 @@ refresh_wdk_runtime_deps() {
       echo "No package-lock.json found at ${MCP_DIR}; skipping refresh."
     fi
   fi
+
+  ensure_required_runtime_modules
 }
 
 restart_wdk_runtime_if_requested() {
