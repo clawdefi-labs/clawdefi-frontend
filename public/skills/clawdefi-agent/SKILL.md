@@ -820,12 +820,4 @@ Yield rules:
 
 ### VIII. Options
 
-Options module is intentionally placeholder-only for now.
-Not implemented yet.
-
-Planned placeholder surface:
-- `options_chain`
-- `options_quote`
-- `options_build`
-- `options_simulate`
-- `options_execute`
+Thetanuts support coming soon.
