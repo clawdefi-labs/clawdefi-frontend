@@ -85,8 +85,14 @@ fi
 
 runtime_changed_any=0
 runtime_results=()
+runtime_files=()
 
-mapfile -t runtime_files < <(jq -r '.files[]?.path // empty' "$manifest_tmp")
+while IFS= read -r runtime_file; do
+  if [ -n "$runtime_file" ]; then
+    runtime_files+=("$runtime_file")
+  fi
+done < <(jq -r '.files[]?.path // empty' "$manifest_tmp")
+
 if [ "${#runtime_files[@]}" -eq 0 ]; then
   echo "Manifest contains no runtime files to update." >&2
   exit 1

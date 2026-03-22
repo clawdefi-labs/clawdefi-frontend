@@ -94,9 +94,32 @@ is_remote_newer() {
   if [ "$local_version" = "$remote_version" ]; then
     return 1
   fi
-  local max_version
-  max_version="$(printf '%s\n%s\n' "$local_version" "$remote_version" | sort -V | tail -n1)"
-  [ "$max_version" = "$remote_version" ]
+  awk -v local="$local_version" -v remote="$remote_version" '
+    function to_numeric_segments(version, output,   sanitized, count, i) {
+      sanitized = version
+      gsub(/[^0-9.]/, "", sanitized)
+      count = split(sanitized, output, ".")
+      if (count < 1) {
+        output[1] = 0
+        count = 1
+      }
+      return count
+    }
+    BEGIN {
+      local_count = to_numeric_segments(local, local_parts)
+      remote_count = to_numeric_segments(remote, remote_parts)
+      max_count = local_count > remote_count ? local_count : remote_count
+      if (max_count < 3) max_count = 3
+
+      for (i = 1; i <= max_count; i++) {
+        local_num = (i in local_parts && local_parts[i] != "") ? local_parts[i] + 0 : 0
+        remote_num = (i in remote_parts && remote_parts[i] != "") ? remote_parts[i] + 0 : 0
+        if (remote_num > local_num) exit 0
+        if (remote_num < local_num) exit 1
+      }
+      exit 1
+    }
+  '
 }
 
 refresh_wdk_runtime_deps() {
