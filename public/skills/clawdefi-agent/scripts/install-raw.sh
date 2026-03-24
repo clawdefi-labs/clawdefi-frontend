@@ -9,32 +9,12 @@ SKILLS_AUTH_TOKEN="${SKILLS_AUTH_TOKEN:-}"
 OPENCLAW_STATE_DIR="${OPENCLAW_STATE_DIR:-$HOME/.openclaw}"
 TARGET_ROOT="${TARGET_ROOT:-${OPENCLAW_STATE_DIR}/skills}"
 TARGET_DIR="${TARGET_ROOT}/${SKILL_NAME}"
-RUNTIME_FILES=(
+RUNTIME_FILES=()
+REQUIRED_RUNTIME_FILES=(
+  "scripts/install-raw.sh"
+  "scripts/update-from-manifest.sh"
   "scripts/onboard.sh"
   "scripts/update.sh"
-  "scripts/wallet-common.js"
-  "scripts/wallet-create.js"
-  "scripts/wallet-import.js"
-  "scripts/wallet-discover.js"
-  "scripts/wallet-select.js"
-  "scripts/wallet-balance.js"
-  "scripts/wallet-sign.js"
-  "scripts/wallet-sign-broadcast.js"
-  "scripts/wallet-transfer.js"
-  "scripts/wallet-total-portfolio.js"
-  "scripts/simulate-transaction.js"
-  "scripts/swap-1inch.js"
-  "scripts/swap-common.js"
-  "scripts/swap-action-helpers.js"
-  "scripts/swap-quote.js"
-  "scripts/swap-build.js"
-  "scripts/swap-simulate.js"
-  "scripts/swap-execute.js"
-  "scripts/query-protocol.js"
-  "scripts/query-coingecko.js"
-  "scripts/query-avantis.js"
-  "scripts/query-pyth.js"
-  "scripts/query-contract-verification.js"
 )
 
 auth_curl() {
@@ -61,6 +41,17 @@ backup_if_exists() {
   fi
 }
 
+contains_runtime_file() {
+  local needle="$1"
+  local item
+  for item in "${RUNTIME_FILES[@]}"; do
+    if [ "$item" = "$needle" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 mkdir -p "$TARGET_DIR" "$TARGET_DIR/scripts"
 
 tmp_dir="$(mktemp -d)"
@@ -76,6 +67,12 @@ fi
 download_skill_url="$SKILL_URL"
 expected_skill_sha256=""
 if [ "$manifest_present" -eq 1 ] && command -v jq >/dev/null 2>&1; then
+  while IFS= read -r runtime_path; do
+    if [ -n "$runtime_path" ]; then
+      RUNTIME_FILES+=("$runtime_path")
+    fi
+  done < <(jq -r '.files[]?.path // empty' "$manifest_tmp")
+
   manifest_skill_url="$(jq -r '.skill_url // empty' "$manifest_tmp")"
   manifest_skill_sha256="$(jq -r '.sha256 // empty' "$manifest_tmp")"
 
@@ -88,6 +85,17 @@ if [ "$manifest_present" -eq 1 ] && command -v jq >/dev/null 2>&1; then
 elif [ "$manifest_present" -eq 1 ]; then
   echo "Warning: manifest downloaded but jq is not installed; skipping manifest metadata/checksum parsing." >&2
 fi
+
+if [ "${#RUNTIME_FILES[@]}" -eq 0 ]; then
+  echo "Warning: manifest file list unavailable; using minimal runtime file fallback." >&2
+  RUNTIME_FILES=("${REQUIRED_RUNTIME_FILES[@]}")
+fi
+
+for required_runtime in "${REQUIRED_RUNTIME_FILES[@]}"; do
+  if ! contains_runtime_file "$required_runtime"; then
+    RUNTIME_FILES+=("$required_runtime")
+  fi
+done
 
 auth_curl "$download_skill_url" -o "$skill_tmp"
 

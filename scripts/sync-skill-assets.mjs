@@ -10,7 +10,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const SKILL_NAME = "clawdefi-agent";
-const RUNTIME_FILES = [
+const REQUIRED_RUNTIME_FILES = [
+  "scripts/install-raw.sh",
+  "scripts/update-from-manifest.sh",
+  "scripts/onboard.sh",
+  "scripts/update.sh"
+];
+const EXCLUDED_RUNTIME_BASENAMES = new Set([
+  "generate-platform-manifest.sh",
+  "generate-skill-manifest.sh",
+  "install-platform.sh",
+  "update-platform.sh",
+  "perps-tx-action-common.js",
+  "query-protocol.js",
+  "simulate-transaction.js",
+  "swap-1inch.js"
+]);
+const FALLBACK_RUNTIME_FILES = [
   "scripts/install-raw.sh",
   "scripts/update-from-manifest.sh",
   "scripts/onboard.sh",
@@ -24,9 +40,6 @@ const RUNTIME_FILES = [
   "scripts/wallet-sign.js",
   "scripts/wallet-sign-broadcast.js",
   "scripts/wallet-transfer.js",
-  "scripts/simulate-transaction.js",
-  "scripts/swap-1inch.js",
-  "scripts/query-protocol.js",
   "scripts/query-coingecko.js",
   "scripts/query-avantis.js",
   "scripts/query-pyth.js",
@@ -120,6 +133,95 @@ async function fetchText(url) {
   return response.text();
 }
 
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json"
+    }
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Fetch failed (${response.status}) ${url}: ${body.slice(0, 180)}`);
+  }
+  return response.json();
+}
+
+function normalizeRuntimePath(runtimePath) {
+  if (!runtimePath) {
+    return null;
+  }
+  const trimmed = String(runtimePath).trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (trimmed.startsWith("scripts/")) {
+    return trimmed;
+  }
+  return `scripts/${trimmed}`;
+}
+
+async function resolveRuntimeFiles() {
+  let discovered = [];
+  const localScriptsDir = path.join(LOCAL_SKILL_ROOT, "scripts");
+
+  if (!DISABLE_LOCAL_SOURCE && (await fileExists(localScriptsDir))) {
+    const localEntries = await readdir(localScriptsDir, { withFileTypes: true });
+    discovered = localEntries.filter((entry) => entry.isFile()).map((entry) => `scripts/${entry.name}`);
+  }
+
+  if (!discovered.length) {
+    const publishedManifestPath = path.join(OUTPUT_SKILL_ROOT, "manifest.json");
+    if (await fileExists(publishedManifestPath)) {
+      try {
+        const publishedManifest = JSON.parse(await readFile(publishedManifestPath, "utf8"));
+        discovered = Array.isArray(publishedManifest.files)
+          ? publishedManifest.files
+              .map((entry) => (entry && typeof entry.path === "string" ? entry.path : ""))
+              .filter(Boolean)
+          : [];
+      } catch {
+        discovered = [];
+      }
+    }
+  }
+
+  if (!discovered.length) {
+    try {
+      const remoteManifest = await fetchJson(`${SOURCE_BASE_URL}/manifest.json`);
+      discovered = Array.isArray(remoteManifest.files)
+        ? remoteManifest.files
+            .map((entry) => (entry && typeof entry.path === "string" ? entry.path : ""))
+            .filter(Boolean)
+        : [];
+    } catch {
+      discovered = [];
+    }
+  }
+
+  if (!discovered.length) {
+    discovered = [...FALLBACK_RUNTIME_FILES];
+  }
+
+  const normalized = new Set();
+  for (const runtimeFile of [...REQUIRED_RUNTIME_FILES, ...discovered]) {
+    const normalizedPath = normalizeRuntimePath(runtimeFile);
+    if (!normalizedPath) {
+      continue;
+    }
+    if (!normalizedPath.startsWith("scripts/")) {
+      continue;
+    }
+    const basename = path.basename(normalizedPath);
+    if (EXCLUDED_RUNTIME_BASENAMES.has(basename)) {
+      continue;
+    }
+    normalized.add(normalizedPath);
+  }
+
+  return [...normalized].sort();
+}
+
 async function loadSourceFile(relativePath) {
   const localPath = path.join(LOCAL_SKILL_ROOT, relativePath);
   if (!DISABLE_LOCAL_SOURCE && (await fileExists(localPath))) {
@@ -154,13 +256,13 @@ async function writeText(targetPath, content) {
   await writeFile(targetPath, content, "utf8");
 }
 
-async function prunePublishedRuntimeFiles() {
+async function prunePublishedRuntimeFiles(runtimeFiles) {
   const scriptsDir = path.join(OUTPUT_SKILL_ROOT, "scripts");
   if (!(await fileExists(scriptsDir))) {
     return;
   }
 
-  const allowed = new Set(RUNTIME_FILES.map((runtimeFile) => path.basename(runtimeFile)));
+  const allowed = new Set(runtimeFiles.map((runtimeFile) => path.basename(runtimeFile)));
   for (const entry of await readdir(scriptsDir, { withFileTypes: true })) {
     if (!entry.isFile()) {
       continue;
@@ -173,6 +275,7 @@ async function prunePublishedRuntimeFiles() {
 }
 
 async function performSync() {
+  const runtimeFiles = await resolveRuntimeFiles();
   const copiedFrom = new Set();
   const fileMap = new Map();
 
@@ -180,7 +283,7 @@ async function performSync() {
   fileMap.set("SKILL.md", skill.content);
   copiedFrom.add(skill.source);
 
-  for (const runtimeFile of RUNTIME_FILES) {
+  for (const runtimeFile of runtimeFiles) {
     const loaded = await loadSourceFile(runtimeFile);
     fileMap.set(runtimeFile, rewriteRuntimeFilePublicUrls(runtimeFile, loaded.content));
     copiedFrom.add(loaded.source);
@@ -191,12 +294,12 @@ async function performSync() {
   const version = parseFrontmatterVersion(skillText);
   const skillSha = sha256(skillText);
 
-  await prunePublishedRuntimeFiles();
+  await prunePublishedRuntimeFiles(runtimeFiles);
   await writeText(path.join(OUTPUT_ROOT, "skill.md"), skillText);
   await writeText(path.join(OUTPUT_SKILL_ROOT, "SKILL.md"), skillText);
 
   const filesManifest = [];
-  for (const runtimeFile of RUNTIME_FILES) {
+  for (const runtimeFile of runtimeFiles) {
     const content = fileMap.get(runtimeFile);
     const outPath = path.join(OUTPUT_SKILL_ROOT, runtimeFile);
     await writeText(outPath, content);
@@ -222,7 +325,7 @@ async function performSync() {
 
   const sourceSummary = [...copiedFrom].sort().join("+");
   console.log(
-    `Synced ${SKILL_NAME} assets (version=${version}, source=${sourceSummary}) to ${OUTPUT_SKILL_ROOT}`
+    `Synced ${SKILL_NAME} assets (version=${version}, source=${sourceSummary}, files=${runtimeFiles.length}) to ${OUTPUT_SKILL_ROOT}`
   );
   console.log(`Published entrypoints: /skill.md and /skills/${SKILL_NAME}/SKILL.md`);
 }
