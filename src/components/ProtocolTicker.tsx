@@ -1,7 +1,7 @@
 "use client";
 
 const protocols = [
-  { name: "0x", slug: "0x", ext: "svg" },
+  { name: "0x Protocol", slug: "0x", ext: "svg" },
   { name: "Aave", slug: "aave", ext: "svg" },
   { name: "Avantis", slug: "avantis", ext: "svg" },
   { name: "Pendle", slug: "pendle", ext: "svg" },
