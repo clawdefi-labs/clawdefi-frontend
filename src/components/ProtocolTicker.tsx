@@ -1,14 +1,14 @@
 "use client";
 
 const protocols = [
-  { name: "0x", slug: "0x" },
-  { name: "Aave", slug: "aave" },
-  { name: "Avantis", slug: "avantis" },
-  { name: "Pendle", slug: "pendle" },
-  { name: "Polymarket", slug: "polymarket" },
-  { name: "Thetanuts", slug: "thetanuts" },
-  { name: "Pyth", slug: "pyth" },
-  { name: "CoinGecko", slug: "coingecko" },
+  { name: "0x", slug: "0x", ext: "svg" },
+  { name: "Aave", slug: "aave", ext: "svg" },
+  { name: "Avantis", slug: "avantis", ext: "svg" },
+  { name: "Pendle", slug: "pendle", ext: "svg" },
+  { name: "Polymarket", slug: "polymarket", ext: "svg" },
+  { name: "Thetanuts", slug: "thetanuts", ext: "svg" },
+  { name: "Pyth", slug: "pyth", ext: "svg" },
+  { name: "CoinGecko", slug: "coingecko", ext: "png" },
 ];
 
 export default function ProtocolTicker() {
@@ -21,7 +21,7 @@ export default function ProtocolTicker() {
         {items.map((p, i) => (
           <div className="ticker-item" key={`${p.slug}-${i}`}>
             <img
-              src={`/logos/${p.slug}.svg`}
+              src={`/logos/${p.slug}.${p.ext}`}
               alt={p.name}
               width={36}
               height={36}
