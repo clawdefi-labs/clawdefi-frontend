@@ -23,8 +23,8 @@ export default function ProtocolTicker() {
             <img
               src={`/logos/${p.slug}.svg`}
               alt={p.name}
-              width={28}
-              height={28}
+              width={36}
+              height={36}
               onError={(e) => {
                 const target = e.currentTarget;
                 target.style.display = "none";

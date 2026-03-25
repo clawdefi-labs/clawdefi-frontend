@@ -95,7 +95,7 @@ export default function Home() {
 
           <HeroMetrics />
 
-          <div className="fade-in delay-4">
+          <div className="ticker-section fade-in delay-4">
             <p className="ticker-heading">Protocols supported by ClawDeFi</p>
             <ProtocolTicker />
           </div>
