@@ -6,6 +6,7 @@ interface ProtocolEntry {
   category: string;
   protocol: string;
   slug: string;
+  ext: string;
   description: string;
   operations: string[];
   chains: ChainId[];
@@ -27,6 +28,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Trading",
     protocol: "0x",
     slug: "0x",
+    ext: "svg",
     description:
       "Token swaps and cross-chain routing via 0x aggregator with optimized execution paths.",
     operations: ["Swap", "Cross-chain Route", "Quote"],
@@ -37,6 +39,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Perpetuals",
     protocol: "Avantis",
     slug: "avantis",
+    ext: "png",
     description:
       "Leveraged perpetual positions with structured entry/exit, stop-loss, and referral tracking.",
     operations: ["Open", "Close", "Modify", "SL/TP", "Referral"],
@@ -47,6 +50,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Lending",
     protocol: "Aave V3",
     slug: "aave",
+    ext: "png",
     description:
       "Supply, borrow, and manage lending positions across Aave V3 markets with risk-aware execution.",
     operations: ["Supply", "Borrow", "Repay", "Withdraw"],
@@ -57,6 +61,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Yield",
     protocol: "Pendle",
     slug: "pendle",
+    ext: "png",
     description:
       "Yield tokenization — mint principal and yield tokens, scan markets for optimal yield surfaces.",
     operations: ["Mint PT/YT", "Yield Scan"],
@@ -67,6 +72,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Predictions",
     protocol: "Polymarket",
     slug: "polymarket",
+    ext: "png",
     description:
       "Browse prediction markets, get quotes, and build structured positions on real-world outcomes.",
     operations: ["Browse Markets", "Quote", "Build Position"],
@@ -77,6 +83,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Options",
     protocol: "Thetanuts",
     slug: "thetanuts",
+    ext: "png",
     description:
       "Structured options vaults — browse available markets and vault data for options strategies.",
     operations: ["Market Data", "Vault Browse"],
@@ -87,6 +94,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Market Intel",
     protocol: "Pyth + CoinGecko",
     slug: "pyth",
+    ext: "png",
     description:
       "Real-time price feeds, token rankings, and market signals from decentralized oracles and aggregators.",
     operations: ["Price Feed", "Rankings", "Signals"],
@@ -97,6 +105,7 @@ const liveProtocols: ProtocolEntry[] = [
     category: "Wallet",
     protocol: "WDK",
     slug: "wdk",
+    ext: "svg",
     description:
       "Wallet development kit — create, import, sign transactions, and manage token transfers across EVM chains.",
     operations: ["Create", "Import", "Sign", "Transfer"],
@@ -122,15 +131,17 @@ const comingSoon = [
 
 function ProtocolLogo({
   slug,
+  ext,
   protocol,
 }: {
   slug: string;
+  ext: string;
   protocol: string;
 }) {
   return (
     <div className="protocol-logo-wrap">
       <img
-        src={`/logos/${slug}.svg`}
+        src={`/logos/${slug}.${ext}`}
         alt={protocol}
         width={40}
         height={40}
@@ -169,7 +180,7 @@ export default function ProtocolGrid() {
             </div>
 
             <div className="protocol-identity">
-              <ProtocolLogo slug={p.slug} protocol={p.protocol} />
+              <ProtocolLogo slug={p.slug} ext={p.ext} protocol={p.protocol} />
               <div>
                 <p className="protocol-category">{p.category}</p>
                 <p className="protocol-name">{p.protocol}</p>
