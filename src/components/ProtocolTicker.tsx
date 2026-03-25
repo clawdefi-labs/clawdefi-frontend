@@ -2,12 +2,12 @@
 
 const protocols = [
   { name: "0x Protocol", slug: "0x", ext: "svg" },
-  { name: "Aave", slug: "aave", ext: "svg" },
+  { name: "Aave", slug: "aave", ext: "png" },
   { name: "Avantis", slug: "avantis", ext: "svg" },
   { name: "Pendle", slug: "pendle", ext: "png" },
   { name: "Polymarket", slug: "polymarket", ext: "png" },
-  { name: "Thetanuts", slug: "thetanuts", ext: "svg" },
-  { name: "Pyth", slug: "pyth", ext: "svg" },
+  { name: "Thetanuts", slug: "thetanuts", ext: "png" },
+  { name: "Pyth", slug: "pyth", ext: "png" },
   { name: "CoinGecko", slug: "coingecko", ext: "png" },
 ];
 
