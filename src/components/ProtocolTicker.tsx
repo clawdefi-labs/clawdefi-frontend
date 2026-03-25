@@ -3,7 +3,7 @@
 const protocols = [
   { name: "0x Protocol", slug: "0x", ext: "svg" },
   { name: "Aave", slug: "aave", ext: "png" },
-  { name: "Avantis", slug: "avantis", ext: "svg" },
+  { name: "Avantis", slug: "avantis", ext: "png" },
   { name: "Pendle", slug: "pendle", ext: "png" },
   { name: "Polymarket", slug: "polymarket", ext: "png" },
   { name: "Thetanuts", slug: "thetanuts", ext: "png" },
