@@ -16,7 +16,7 @@ export default function HeroMetrics() {
 
       {/* Protocols Supported (Placeholder) */}
       <article className="stat-card">
-        <p className="metric-value">42</p>
+        <p className="metric-value">17</p>
         <p className="metric-label">protocols supported</p>
         <p className="metric-subtle">across 8 major networks</p>
       </article>
