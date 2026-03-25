@@ -93,11 +93,12 @@ export default function Home() {
             <a href="#protocols" className="btn btn-outline">Explore Protocols</a>
           </div>
 
-          <div className="fade-in delay-3">
+          <HeroMetrics />
+
+          <div className="fade-in delay-4">
+            <p className="ticker-heading">Protocols supported by ClawDeFi</p>
             <ProtocolTicker />
           </div>
-
-          <HeroMetrics />
         </div>
       </section>
 

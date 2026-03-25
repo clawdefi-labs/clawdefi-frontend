@@ -1012,6 +1012,16 @@ a {
    Protocol Ticker (Hero marquee)
    ================================================ */
 
+.ticker-heading {
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-2);
+}
+
 .protocol-ticker {
   margin-top: 2rem;
   overflow: hidden;
