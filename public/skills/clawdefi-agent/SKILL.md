@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.70
+version: 0.1.71
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -42,7 +42,7 @@ bash {baseDir}/scripts/onboard.sh
 This onboarding path:
 - checks `node`, `npm`, and `openclaw`,
 - creates a local WDK MCP runtime at `~/.openclaw/clawdefi/wdk-mcp`,
-- installs `@tetherto/wdk`, `@tetherto/wdk-wallet-evm`, `@tetherto/wdk-wallet-solana`, WDK MCP toolkit (GitHub source), `@modelcontextprotocol/sdk`, and `avantis-trader-sdk`,
+- installs `@tetherto/wdk`, `@tetherto/wdk-wallet-evm`, `@tetherto/wdk-wallet-solana`, WDK MCP toolkit (GitHub source), `@modelcontextprotocol/sdk`, `avantis-trader-sdk`, `@polymarket/clob-client`, and `@thetanuts-finance/thetanuts-client`,
 - scaffolds a local stdio MCP server with EVM, Solana, and pricing tools,
 - writes local config templates only,
 - preserves existing local `~/.openclaw/clawdefi/wdk-mcp/.env` if already present,
@@ -820,4 +820,114 @@ Yield rules:
 
 ### VIII. Options
 
-Thetanuts support coming soon.
+Options execution is local-first and adapter-based.
+
+Current adapter:
+- `thetanuts`
+
+Execution model:
+- discovery and quote use Thetanuts API + pricing surfaces,
+- deterministic local planning builds approval + fill steps,
+- signing/simulation/broadcast stays local through WDK wallet runtime.
+
+Current venue support:
+- Base mainnet only (`base-mainnet`, chainId `8453`).
+
+#### options_chain
+Show supported chain config, contracts, token addresses, and default referrer context.
+
+```bash
+node {baseDir}/scripts/options-chain.js --adapter thetanuts --chain base-mainnet
+```
+
+#### options_market_data
+Fetch market spot data and optional options pricing snapshots.
+
+```bash
+node {baseDir}/scripts/options-market-data.js --adapter thetanuts --chain base-mainnet --underlying ETH --include-pricing true --limit 25
+```
+
+Include protocol stats:
+
+```bash
+node {baseDir}/scripts/options-market-data.js --adapter thetanuts --chain base-mainnet --include-stats true
+```
+
+#### options_orderbook
+List and filter currently fillable options orders.
+
+```bash
+node {baseDir}/scripts/options-orderbook.js --adapter thetanuts --chain base-mainnet --underlying ETH --option-type put --limit 20
+```
+
+Select sorting and include expired:
+
+```bash
+node {baseDir}/scripts/options-orderbook.js --adapter thetanuts --chain base-mainnet --sort-by expiry --sort-order desc --include-expired true
+```
+
+#### options_quote
+Preview deterministic fill details for a selected order.
+
+Use order index from filtered orderbook:
+
+```bash
+node {baseDir}/scripts/options-quote.js --adapter thetanuts --chain base-mainnet --underlying ETH --option-type call --order-index 0 --amount 10000000
+```
+
+Or select by order key:
+
+```bash
+node {baseDir}/scripts/options-quote.js --adapter thetanuts --chain base-mainnet --order-key 0xmaker:123 --amount-usdc 10.5
+```
+
+#### options_positions
+Fetch user options positions from indexer view.
+
+Use selected local wallet:
+
+```bash
+node {baseDir}/scripts/options-positions.js --adapter thetanuts --chain base-mainnet --status open
+```
+
+Use explicit address:
+
+```bash
+node {baseDir}/scripts/options-positions.js --adapter thetanuts --chain base-mainnet --address 0xabc --status all --limit 100
+```
+
+#### options_build
+Build deterministic approval + fill plan and intent hash.
+
+```bash
+node {baseDir}/scripts/options-build.js --adapter thetanuts --chain base-mainnet --underlying ETH --option-type call --order-index 0 --amount 10000000 --approval-mode exact
+```
+
+Unlimited approval planning (explicit opt-in required):
+
+```bash
+node {baseDir}/scripts/options-build.js --adapter thetanuts --chain base-mainnet --order-key 0xmaker:123 --amount-usdc 20 --approval-mode unlimited --allow-unlimited true
+```
+
+#### options_simulate
+Simulate each planned tx step locally (approval + fill) through WDK quote path.
+
+```bash
+node {baseDir}/scripts/options-simulate.js --adapter thetanuts --chain base-mainnet --order-index 0 --amount 10000000 --approval-mode exact
+```
+
+#### options_execute
+Execute each planned tx step locally via WDK signing + broadcast.
+Requires explicit execute confirmation.
+
+```bash
+node {baseDir}/scripts/options-execute.js --adapter thetanuts --chain base-mainnet --order-index 0 --amount 10000000 --approval-mode exact --confirm-execute true
+```
+
+Options rules:
+- EVM Base mainnet only for now,
+- run `options_simulate` before `options_execute`,
+- execution requires explicit `--confirm-execute true`,
+- `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
+- use adapter-built tx requests only; do not handcraft calldata in chat,
+- do not request seed phrase/private key in chat.

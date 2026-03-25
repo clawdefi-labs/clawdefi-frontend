@@ -1,8 +1,8 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.70",
+  "version": "0.1.71",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "2a6eeb84880683f7e2fd8ad8ffcb98ed2ddd1d395b5c3ca151bdde69e6fa8931",
+  "sha256": "dbf4f51964c1124a55c4792fa0f9f655bcf512012f432826b5bde560fa329ca0",
   "files": [
     {
       "path": "scripts/crypto-market-rank.js",
@@ -67,7 +67,62 @@
     {
       "path": "scripts/onboard.sh",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/onboard.sh",
-      "sha256": "5f072a6b485ee0232c1b2086d41c22230576cf027909370823d375c60a350c36"
+      "sha256": "0478929e882738b105192668c4457546395b90df9362e3f09e8be573c1845312"
+    },
+    {
+      "path": "scripts/options-action-helpers.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-action-helpers.js",
+      "sha256": "5e851e100dac0029cd57b67a316f9fc0a4867d7ce9cbe47095967e6d53af33b6"
+    },
+    {
+      "path": "scripts/options-adapter-thetanuts.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-adapter-thetanuts.js",
+      "sha256": "d55a40ce098d97665c55677dfe12a41d98c7e5199bbf4cd04a0db3c8c2f00afe"
+    },
+    {
+      "path": "scripts/options-build.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-build.js",
+      "sha256": "e418b7df27938115ef84d88828a73f9c51e7d63a08d76717d705da8c7de837fd"
+    },
+    {
+      "path": "scripts/options-chain.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-chain.js",
+      "sha256": "f8cc7abea66259889ffdc5faf1dc927e82a82e3a3b8d291cf1fc2e27c559c8fc"
+    },
+    {
+      "path": "scripts/options-common.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-common.js",
+      "sha256": "6ba02dc3a28e76cd4e1a70c0946d86fc49ee86cf1d0831d221a628b487b445fc"
+    },
+    {
+      "path": "scripts/options-execute.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-execute.js",
+      "sha256": "45cab7c2736e6bf98e6e16f5b9fbe7dad9a853cb264e71b3658c7626fe4b3bb4"
+    },
+    {
+      "path": "scripts/options-market-data.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-market-data.js",
+      "sha256": "a657ca12232ed001094a4e5aafd797a4273795dfd184a0bdb0d39e9c2c5f6b71"
+    },
+    {
+      "path": "scripts/options-orderbook.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-orderbook.js",
+      "sha256": "69d5e6034229898244a1ab12747e891aafafbacdb2bab15c311336b1561e4810"
+    },
+    {
+      "path": "scripts/options-positions.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-positions.js",
+      "sha256": "618ec11ffd59c02f46697fd7fa1a77cb9f58403a9170497a5c601296dfc3a3e4"
+    },
+    {
+      "path": "scripts/options-quote.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-quote.js",
+      "sha256": "2b8439b113d235c5676fc4a4a02aefd633ef4eed109195ce24684fec8b17dcba"
+    },
+    {
+      "path": "scripts/options-simulate.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/options-simulate.js",
+      "sha256": "69f5e640697657914fbd2cda00eaa16cee70ba6f8e20eef72c6e24996007b46c"
     },
     {
       "path": "scripts/perps-action-helpers.js",
