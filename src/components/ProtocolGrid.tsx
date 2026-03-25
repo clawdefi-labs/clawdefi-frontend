@@ -25,10 +25,10 @@ const CHAIN_COLORS: Record<ChainId, string> = {
 const liveProtocols: ProtocolEntry[] = [
   {
     category: "Trading",
-    protocol: "1inch",
-    slug: "1inch",
+    protocol: "0x",
+    slug: "0x",
     description:
-      "Token swaps and cross-chain routing across major DEX aggregators with optimized execution paths.",
+      "Token swaps and cross-chain routing via 0x aggregator with optimized execution paths.",
     operations: ["Swap", "Cross-chain Route", "Quote"],
     chains: ["ETH", "Base", "BNB", "MATIC", "OP", "ARB", "AVAX"],
     status: "live",
