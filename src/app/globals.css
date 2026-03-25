@@ -995,3 +995,441 @@ a {
   border-radius: 999px;
   margin-top: 16px;
 }
+
+/* ================================================
+   Hero CTA Row
+   ================================================ */
+
+.hero-cta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 1.5rem;
+}
+
+/* ================================================
+   Protocol Ticker (Hero marquee)
+   ================================================ */
+
+.protocol-ticker {
+  margin-top: 2rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+
+.ticker-track {
+  display: flex;
+  gap: 40px;
+  width: max-content;
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ticker-item img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.ticker-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--panel-strong);
+  color: var(--mint-soft);
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticker-label {
+  color: var(--text-2);
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ================================================
+   Runtime Timeline (How It Works)
+   ================================================ */
+
+.runtime-timeline {
+  margin-top: 32px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-step {
+  display: flex;
+  gap: 24px;
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--mint);
+  color: var(--mint);
+  font-family: var(--font-mono), "SFMono-Regular", Menlo, monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(89, 242, 178, 0.06);
+  box-shadow: 0 0 20px rgba(89, 242, 178, 0.12);
+}
+
+.step-line {
+  width: 2px;
+  flex: 1;
+  min-height: 32px;
+  background: linear-gradient(180deg, var(--mint), rgba(89, 242, 178, 0.15));
+}
+
+.step-content {
+  padding-bottom: 36px;
+}
+
+.step-content h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 48px;
+}
+
+.step-content p {
+  margin: 8px 0 0;
+  color: var(--text-1);
+  line-height: 1.55;
+}
+
+/* ================================================
+   Intelligence Core Cards
+   ================================================ */
+
+.intel-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(13, 34, 48, 0.9), rgba(10, 24, 36, 0.82));
+  padding: 24px 20px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.intel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(2, 8, 18, 0.5);
+  border-color: rgba(89, 242, 178, 0.3);
+}
+
+.intel-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(89, 242, 178, 0.08);
+  border: 1px solid rgba(89, 242, 178, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 14px;
+}
+
+.intel-card h3 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.intel-card p {
+  margin: 10px 0 0;
+  color: var(--text-1);
+  line-height: 1.55;
+}
+
+/* ================================================
+   Protocol Grid
+   ================================================ */
+
+.protocol-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.protocol-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(13, 34, 48, 0.9), rgba(10, 24, 36, 0.82));
+  padding: 20px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.protocol-card:hover {
+  box-shadow: 0 12px 32px rgba(2, 8, 18, 0.45);
+}
+
+.protocol-card--live {
+  border-color: rgba(89, 242, 178, 0.25);
+}
+
+.protocol-card--live:hover {
+  border-color: rgba(89, 242, 178, 0.5);
+}
+
+.protocol-card--paused {
+  border-color: rgba(255, 193, 110, 0.25);
+}
+
+.protocol-card--paused:hover {
+  border-color: rgba(255, 193, 110, 0.5);
+}
+
+.protocol-card--coming-soon {
+  border-color: rgba(124, 200, 255, 0.2);
+  opacity: 0.7;
+}
+
+/* Status row */
+.protocol-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot--live {
+  background: var(--mint);
+  box-shadow: 0 0 8px rgba(89, 242, 178, 0.6);
+}
+
+.status-dot--paused {
+  background: var(--amber);
+  box-shadow: 0 0 8px rgba(255, 193, 110, 0.5);
+}
+
+.status-dot--coming-soon {
+  background: var(--cyan);
+}
+
+.status-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+}
+
+/* Identity (logo + category + name) */
+.protocol-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.protocol-logo-wrap {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.protocol-logo-wrap img {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.protocol-logo-fallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--panel-strong);
+  color: var(--mint-soft);
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.protocol-category {
+  margin: 0;
+  color: var(--mint);
+  font-family: var(--font-mono), "SFMono-Regular", Menlo, monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.protocol-name {
+  margin: 2px 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.protocol-desc {
+  margin: 0 0 14px;
+  color: var(--text-1);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Operation badges */
+.protocol-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.op-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-0);
+  background: rgba(89, 242, 178, 0.08);
+  border: 1px solid rgba(89, 242, 178, 0.2);
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+/* Divider */
+.protocol-divider {
+  height: 1px;
+  background: var(--line);
+  margin-bottom: 12px;
+}
+
+/* Chain pills */
+.protocol-chains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chain-pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-1);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  padding: 3px 8px;
+  border-left: 3px solid var(--chain-color, var(--line));
+}
+
+/* ================================================
+   Coming Soon Strip
+   ================================================ */
+
+.coming-soon-strip {
+  margin-top: 28px;
+}
+
+.coming-soon-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-2);
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.coming-soon-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.coming-soon-card {
+  border: 1px dashed rgba(124, 200, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(10, 24, 36, 0.5);
+  padding: 16px;
+  text-align: center;
+}
+
+.coming-soon-card h4 {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--cyan);
+}
+
+.coming-soon-card p {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+/* ================================================
+   Responsive — Protocol Grid & Timeline
+   ================================================ */
+
+@media (max-width: 1080px) {
+  .protocol-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .protocol-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .coming-soon-items {
+    grid-template-columns: 1fr;
+  }
+
+  .runtime-timeline {
+    padding-left: 8px;
+  }
+
+  .step-content h3 {
+    line-height: 1.3;
+    padding-top: 10px;
+  }
+
+  .hero-cta-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .hero-cta-row .btn {
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+  }
+}

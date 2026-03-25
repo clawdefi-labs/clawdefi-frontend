@@ -36,11 +36,10 @@ export default function MobileNav() {
 
       <div className={`mobile-menu-overlay ${isOpen ? "is-open" : ""}`}>
         <nav className="mobile-nav-links">
-          <a href="#install" className="mobile-nav-link" onClick={closeMenu}>Install</a>
-          <a href="#runtime" className="mobile-nav-link" onClick={closeMenu}>What can ClawDeFi do</a>
-          <a href="#modules" className="mobile-nav-link" onClick={closeMenu}>Roadmap</a>
-          <a href="#runtime" className="mobile-nav-link" onClick={closeMenu}>Runtime</a>
-          <a href="#modules" className="mobile-nav-link" onClick={closeMenu}>Modules</a>
+          <a href="#how-it-works" className="mobile-nav-link" onClick={closeMenu}>How It Works</a>
+          <a href="#intelligence" className="mobile-nav-link" onClick={closeMenu}>Intelligence</a>
+          <a href="#protocols" className="mobile-nav-link" onClick={closeMenu}>Protocols</a>
+          <a href="#install" className="mobile-nav-link" onClick={closeMenu}>Get Started</a>
           <a href="/skill.md" className="mobile-nav-pill" onClick={closeMenu}>skill.md</a>
         </nav>
       </div>

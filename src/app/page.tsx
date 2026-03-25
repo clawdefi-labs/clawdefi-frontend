@@ -4,71 +4,51 @@ import InstallSkillPanel from "@/components/InstallSkillPanel";
 import HeroMetrics from "@/components/HeroMetrics";
 import TronGrid from "@/components/TronGrid";
 import MobileNav from "@/components/MobileNav";
+import ProtocolTicker from "@/components/ProtocolTicker";
+import ProtocolGrid from "@/components/ProtocolGrid";
 
 const runtimeTrack = [
   {
-    title: "Wallet-first discovery",
-    body: "Ask signer readiness first, keep custody local, and block execution until signer checks pass."
+    title: "Custody stays with you",
+    body: "Your agent verifies signer readiness before touching any protocol. Keys never leave your wallet. Nothing executes until custody checks pass."
   },
   {
-    title: "Deterministic protocol intelligence",
-    body: "Resolve chain metadata, protocol action specs, endpoints, contract verification, and risk posture before tx intent."
+    title: "Protocol context, resolved",
+    body: "Chain metadata, contract verification, action specs, and risk posture — all resolved before your agent forms a transaction intent."
   },
   {
-    title: "Execution guardrails",
-    body: "Simulate before signing, enforce allowance policy, and require explicit user confirmation before broadcast."
+    title: "Simulate before you sign",
+    body: "Every transaction runs through a simulation gate pre-sign. Allowance policies are enforced. Nothing broadcasts without your explicit confirmation."
   },
   {
-    title: "Perp and unwind discipline",
-    body: "Run Avantis perp flow locally for market and limit actions, then keep unwind paths and alert polling active."
+    title: "Built-in exit strategies",
+    body: "Perpetual and leveraged flows execute with structured validation. Unwind paths and alert monitoring stay active so your agent always has a way out."
   }
 ];
 
 const corePlanes = [
   {
     title: "Protocol Registry",
-    body: "Chain-aware protocol records with contracts, ABIs, callable functions, and curated action mappings."
+    icon: "📡",
+    body: "The canonical source of protocol truth — contracts, ABIs, callable functions, chain context, and curated action mappings across major networks."
   },
   {
-    title: "Curated Vaults",
-    body: "Structured vault intelligence for agentic managers, stake-aligned access, and observable risk constraints."
+    title: "Vault Intelligence",
+    icon: "🔐",
+    body: "Structured vault data for agents comparing capital allocation surfaces — risk constraints, yield profiles, and stake-aligned access controls."
   },
   {
-    title: "Curated Strategies",
-    body: "Stablecoin parking paths and strategy templates with transparent assumptions and unwind metadata."
+    title: "Strategy Templates",
+    icon: "⚙️",
+    body: "Battle-tested strategy blueprints with transparent assumptions, risk profiles, and pre-built unwind paths your agent can execute against."
   }
-];
-
-const activeModules = [
-  "query-chain-registry",
-  "query-protocol",
-  "query-action-spec",
-  "query-integration-endpoint",
-  "query-contract-verification",
-  "query-pyth",
-  "query-coingecko",
-  "wallet-readiness-check",
-  "token-balance-check",
-  "simulate-transaction",
-  "allowance-manager",
-  "swap (1inch-first)",
-  "trade-perp (Avantis local Python)",
-  "build-unwind-plan",
-  "subscribe-alerts / poll / close"
-];
-
-const nextModules = [
-  "trade-options",
-  "position-health-check",
-  "contract-trust-check",
-  "connect-prediction-market"
 ];
 
 export default function Home() {
   return (
     <main className="main-wrapper">
       <TronGrid />
-      
+
       <header className="nav-bar">
         <Link href="/" className="brand-mark">
           <Image
@@ -83,11 +63,10 @@ export default function Home() {
         </Link>
 
         <nav className="nav-menu">
-          <a href="#install" className="nav-link">Install</a>
-          <a href="#runtime" className="nav-link">What can ClawDeFi do</a>
-          <a href="#modules" className="nav-link">Roadmap</a>
-          <a href="#runtime" className="nav-link">Runtime</a>
-          <a href="#modules" className="nav-link">Modules</a>
+          <a href="#how-it-works" className="nav-link">How It Works</a>
+          <a href="#intelligence" className="nav-link">Intelligence</a>
+          <a href="#protocols" className="nav-link">Protocols</a>
+          <a href="#install" className="nav-link">Get Started</a>
           <a href="/skill.md" className="nav-pill">skill.md</a>
         </nav>
 
@@ -97,58 +76,64 @@ export default function Home() {
       <section className="hero-edge">
         <div className="hero-content">
           <p className="kicker fade-in">The DeFi Intelligence Layer for the Agentic Future</p>
-          
+
           <h1 className="hero-title fade-in delay-1">
             Install a DeFi brain<br />on your agent.
           </h1>
-          
+
           <p className="hero-desc fade-in delay-2">
-            We believe that, in the future, most financial decisions will be made by humans&apos;
-            agentic companions. We&apos;re building the intelligence layer that lets agents query
-            protocols, assess risk, and execute DeFi actions by intent.
+            We believe that, in the future, most financial decisions will be made
+            by humans&apos; agentic companions. We&apos;re building the intelligence
+            layer that lets agents query protocols, assess risk, and execute DeFi
+            actions by intent.
           </p>
+
+          <div className="hero-cta-row fade-in delay-3">
+            <a href="#install" className="btn btn-solid">Get Started</a>
+            <a href="#protocols" className="btn btn-outline">Explore Protocols</a>
+          </div>
+
+          <div className="fade-in delay-3">
+            <ProtocolTicker />
+          </div>
 
           <HeroMetrics />
         </div>
       </section>
 
       <div className="site-shell content-stack">
-        <section id="install" className="section-block">
+        <section id="how-it-works" className="section-block">
           <header className="section-head text-center">
-            <h2>INSTALL INSTRUCTIONS</h2>
-            <p className="section-kicker">One canonical skill that your agent needs.</p>
-          </header>
-          <div className="install-wrapper">
-             <InstallSkillPanel />
-          </div>
-        </section>
-
-        <section id="runtime" className="section-block">
-          <header className="section-head text-center">
-             <h2>EXECUTION RUNTIME</h2>
-             <p className="section-kicker">Safety first.</p>
+            <h2>HOW IT WORKS</h2>
+            <p className="section-kicker">Every action runs through deterministic execution logic before your agent touches capital.</p>
           </header>
 
-          <div className="card-grid runtime-grid">
+          <div className="runtime-timeline">
             {runtimeTrack.map((item, index) => (
-              <article className="info-card" key={item.title}>
-                <p className="card-index">0{index + 1}</p>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </article>
+              <div className="timeline-step" key={item.title}>
+                <div className="step-indicator">
+                  <span className="step-number">0{index + 1}</span>
+                  {index < runtimeTrack.length - 1 && <div className="step-line" />}
+                </div>
+                <div className="step-content">
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                </div>
+              </div>
             ))}
           </div>
         </section>
 
-        <section className="section-block">
-           <header className="section-head text-center">
-             <h2>DATA CORE</h2>
-             <p className="section-kicker">Deterministic intelligence.</p>
+        <section id="intelligence" className="section-block">
+          <header className="section-head text-center">
+            <h2>INTELLIGENCE CORE</h2>
+            <p className="section-kicker">Canonical data, structured for machines. The protocol context your agent needs before it acts.</p>
           </header>
 
           <div className="card-grid">
             {corePlanes.map((item) => (
-              <article className="info-card" key={item.title}>
+              <article className="intel-card" key={item.title}>
+                <div className="intel-icon">{item.icon}</div>
                 <h3>{item.title}</h3>
                 <p>{item.body}</p>
               </article>
@@ -156,35 +141,27 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="modules" className="section-block">
-           <header className="section-head text-center">
-             <h2>SKILL MODULES</h2>
-             <p className="section-kicker">Capabilities.</p>
+        <section id="protocols" className="section-block">
+          <header className="section-head text-center">
+            <h2>PROTOCOL ECOSYSTEM</h2>
+            <p className="section-kicker">What your agent can do today — organized by protocol, with live chain support and operation details.</p>
           </header>
+          <ProtocolGrid />
+        </section>
 
-          <div className="module-columns">
-            <article className="module-box active">
-              <h3>Active in MVP</h3>
-              <ul>
-                {activeModules.map((module) => (
-                  <li key={module}>{module}</li>
-                ))}
-              </ul>
-            </article>
-            <article className="module-box pending">
-              <h3>Next expansion</h3>
-              <ul>
-                {nextModules.map((module) => (
-                  <li key={module}>{module}</li>
-                ))}
-              </ul>
-            </article>
+        <section id="install" className="section-block">
+          <header className="section-head text-center">
+            <h2>GET STARTED</h2>
+            <p className="section-kicker">One skill. Infinite DeFi capabilities.</p>
+          </header>
+          <div className="install-wrapper">
+            <InstallSkillPanel />
           </div>
         </section>
       </div>
 
       <footer className="site-footer">
-        <p>© 2026 ClawDeFi. The DeFi Intelligence empowering the agentic future.</p>
+        <p>&copy; 2026 ClawDeFi. Execution infrastructure for agent-native finance.</p>
         <p>
           <a href="/skill.md">/skill.md</a> · Powered by ClawDeFi Protocol
         </p>
