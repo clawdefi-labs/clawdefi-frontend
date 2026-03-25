@@ -18,9 +18,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ClawDeFi | DeFi Intelligence for Agentic Futures",
+  title: "ClawDeFi | The DeFi Intelligence Layer for Agents",
   description:
-    "ClawDeFi is the source of DeFi intelligence for agents, with deterministic protocol guidance, risk controls, and execution-safe workflows.",
+    "Execution infrastructure for agent-native finance. ClawDeFi lets AI agents query protocols, assess risk, and execute on-chain actions — with simulation, verification, and safety gates before capital moves.",
 };
 
 export default function RootLayout({
@@ -32,9 +32,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${spaceGrotesk.className} ${ibmPlexMono.variable}`}>
         <div className="alpha-banner" role="status" aria-live="polite">
-          <span className="alpha-banner-label">DISCLAIMER:</span> ClawDeFi is currently in alpha
-          testing. OpenClaw and other autonomous agents are powerful but still very early-stage
-          systems. Use with EXTREME CAUTION.
+          <span className="alpha-banner-label">ALPHA:</span> ClawDeFi is in active development.
+          Autonomous agents are powerful but early-stage — use with caution and verify all actions
+          before signing.
         </div>
         {children}
         <VisitBeacon />

@@ -33,12 +33,12 @@ bash <(curl -fsSL ${SKILL_BASE}/scripts/install-raw.sh)`;
 
 function buildFootnote(mode: InstallMode) {
   if (mode === "clawhub") {
-    return "Best UX for most users. ClawHub handles package updates and versioning.";
+    return "Recommended. ClawHub manages updates and versioning automatically.";
   }
   if (mode === "prompt") {
-    return "Your claw is smart and knows how to do it by itself.";
+    return "Let your agent handle it. Just point it to the skill manifest.";
   }
-  return "Raw mode is useful when ClawHub is unavailable. Uses your hosted SKILL.md + manifest.";
+  return "Direct installation from source. Use when ClawHub is unavailable.";
 }
 
 export default function InstallSkillPanel() {
