@@ -1,8 +1,8 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.74",
+  "version": "0.1.75",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "5ca52aab3dff1e7e8228e7f1a81a130db8185437b4746fc4849d637d04b0c0be",
+  "sha256": "698db3a16e282cdff30bc6838239971608364b4b139231462118865bf309345d",
   "files": [
     {
       "path": "scripts/crosschain-action-helpers.js",
@@ -177,7 +177,7 @@
     {
       "path": "scripts/perps-adapter-avantis.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/perps-adapter-avantis.js",
-      "sha256": "ebec5bb6dd2ed233011d294f4dbeaba4c96fc5eacb420172b8db267fac226f0a"
+      "sha256": "9cb4e4c835867daa092a22916c519fec844f0d1afc15d97aa0c7fa2064766a76"
     },
     {
       "path": "scripts/perps-cancel-order-build.js",

@@ -750,7 +750,7 @@ async function buildOpen (input) {
     pairState.pairIndex,
     0,
     sdk.toBlockchain6(collateralUsd),
-    sdk.toBlockchain6(collateralUsd * leverage),
+    sdk.toBlockchain6(collateralUsd),
     sdk.toBlockchain10(openPrice || 0),
     side === 'long',
     sdk.toBlockchain10(leverage),
