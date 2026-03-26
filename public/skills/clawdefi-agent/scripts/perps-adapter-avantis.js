@@ -93,6 +93,16 @@ function parseNonNegativeNumber (value, label) {
   return num
 }
 
+function computeNotionalUsd (collateralUsd, leverage) {
+  return Number((Number(collateralUsd) * Number(leverage)).toFixed(6))
+}
+
+function computeMinCollateralRequiredUsd (minPositionSizeUsd, leverage) {
+  if (!Number.isFinite(minPositionSizeUsd) || minPositionSizeUsd <= 0) return 0
+  if (!Number.isFinite(leverage) || leverage <= 0) return minPositionSizeUsd
+  return Number((minPositionSizeUsd / leverage).toFixed(6))
+}
+
 function toBigIntFlexible (value, fallback = 0n) {
   if (value === undefined || value === null || value === '') return fallback
   if (typeof value === 'bigint') return value
@@ -382,6 +392,7 @@ async function resolvePairState ({ client, sdk, market }) {
   const maxLeverageFromBackend = sdk.fromBlockchain10(pairBackend.pair.leverages.maxLeverage)
   const minLeverageFromBackend = sdk.fromBlockchain10(pairBackend.pair.leverages.minLeverage)
   const minLevPosUsd = sdk.fromBlockchain6(pairBackend.fee.minLevPosUSDC)
+  const minPositionSizeUsd = Number(minLevPosUsd)
 
   return {
     market: normalizedMarket,
@@ -389,7 +400,10 @@ async function resolvePairState ({ client, sdk, market }) {
     pairInfo: pairInfo || null,
     maxLeverage: Number(maxLeverageFromBackend),
     minLeverage: Number(minLeverageFromBackend),
-    minCollateralUsd: Number(minLevPosUsd),
+    minPositionSizeUsd,
+    minCollateralUsdAt1x: minPositionSizeUsd,
+    // Backward-compatible alias for downstream callers expecting this field.
+    minCollateralUsd: minPositionSizeUsd,
     fee: {
       openFeePct: socketPair && socketPair.openFeePct !== null ? socketPair.openFeePct : Number(sdk.fromBlockchain12(pairBackend.fee.openFeeP)),
       closeFeePct: socketPair && socketPair.closeFeePct !== null ? socketPair.closeFeePct : Number(sdk.fromBlockchain12(pairBackend.fee.closeFeeP))
@@ -552,6 +566,8 @@ async function marketContext ({ chain, market }) {
     pairIndex: pairState.pairIndex,
     maxLeverage: pairState.maxLeverage,
     minLeverage: pairState.minLeverage,
+    minPositionSizeUsd: pairState.minPositionSizeUsd,
+    minCollateralUsdAt1x: pairState.minCollateralUsdAt1x,
     minCollateralUsd: pairState.minCollateralUsd,
     fee: pairState.fee,
     feed: pairState.feed,
@@ -559,6 +575,7 @@ async function marketContext ({ chain, market }) {
     listed: pairState.listed,
     metadata: {
       source: 'avantis-sdk+socket',
+      minimumCheck: 'collateralUsd * leverage >= minPositionSizeUsd',
       dataVersion: pairState.dataVersion,
       asOf: new Date().toISOString(),
       rpcUrl: rpc.rpcUrl
@@ -606,11 +623,17 @@ async function quoteOpen ({ chain, market, side, collateralUsd, leverage }) {
   if (leverage > pair.maxLeverage) {
     throw new Error(`Requested leverage ${leverage}x exceeds max leverage ${pair.maxLeverage}x for ${pair.market}.`)
   }
-  if (collateralUsd < pair.minCollateralUsd) {
-    throw new Error(`Collateral ${collateralUsd} is below minimum ${pair.minCollateralUsd} for ${pair.market}.`)
+  const notionalUsd = computeNotionalUsd(collateralUsd, leverage)
+  const minPositionSizeUsd = Number(pair.minPositionSizeUsd || pair.minCollateralUsd || 0)
+  if (notionalUsd < minPositionSizeUsd) {
+    const minCollateralRequiredUsd = computeMinCollateralRequiredUsd(minPositionSizeUsd, leverage)
+    throw new Error(
+      `Position notional ${notionalUsd} is below minimum ${minPositionSizeUsd} for ${pair.market}. ` +
+      `Provide collateral >= ${minCollateralRequiredUsd} at ${leverage}x.`
+    )
   }
 
-  const estOpenFeeUsd = Number(((collateralUsd * leverage * pair.fee.openFeePct) / 100).toFixed(6))
+  const estOpenFeeUsd = Number(((notionalUsd * pair.fee.openFeePct) / 100).toFixed(6))
 
   return {
     provider: 'avantis',
@@ -618,8 +641,11 @@ async function quoteOpen ({ chain, market, side, collateralUsd, leverage }) {
     side,
     collateralUsd,
     leverage,
-    notionalUsd: Number((collateralUsd * leverage).toFixed(6)),
+    notionalUsd,
     maxLeverage: pair.maxLeverage,
+    minPositionSizeUsd,
+    minCollateralRequiredUsd: computeMinCollateralRequiredUsd(minPositionSizeUsd, leverage),
+    minCollateralUsdAt1x: pair.minCollateralUsdAt1x,
     minCollateralUsd: pair.minCollateralUsd,
     estOpenFeeUsd,
     warnings: []
@@ -691,8 +717,14 @@ async function buildOpen (input) {
   if (leverage < pairState.minLeverage) {
     throw new Error(`Requested leverage ${leverage}x is below min leverage ${pairState.minLeverage}x for ${pairState.market}.`)
   }
-  if (collateralUsd < pairState.minCollateralUsd) {
-    throw new Error(`Collateral ${collateralUsd} is below minimum ${pairState.minCollateralUsd} for ${pairState.market}.`)
+  const notionalUsd = computeNotionalUsd(collateralUsd, leverage)
+  const minPositionSizeUsd = Number(pairState.minPositionSizeUsd || pairState.minCollateralUsd || 0)
+  if (notionalUsd < minPositionSizeUsd) {
+    const minCollateralRequiredUsd = computeMinCollateralRequiredUsd(minPositionSizeUsd, leverage)
+    throw new Error(
+      `Position notional ${notionalUsd} is below minimum ${minPositionSizeUsd} for ${pairState.market}. ` +
+      `Provide collateral >= ${minCollateralRequiredUsd} at ${leverage}x.`
+    )
   }
 
   let openPrice = limitPrice || 0
