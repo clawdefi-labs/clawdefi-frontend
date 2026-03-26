@@ -78,7 +78,7 @@ export default function Home() {
           <p className="kicker fade-in">The DeFi Intelligence Layer for the Agentic Future</p>
 
           <h1 className="hero-title fade-in delay-1">
-            Install a DeFi brain<br />on your agent.
+            Install a DeFi brains<br />on your agent.
           </h1>
 
           <p className="hero-desc fade-in delay-2">
