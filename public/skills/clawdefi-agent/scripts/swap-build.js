@@ -2,7 +2,7 @@
 'use strict'
 
 const {
-  callSwapApi,
+  callSwapPrepareWithConsentRecovery,
   normalizeAdapter,
   parseArgs,
   printFailure,
@@ -40,7 +40,8 @@ const {
     const swap = parseSwapArgs(args, wallet.chain)
     const approvalMode = parseApprovalMode(args)
     const payload = buildSwapPayload(swap, wallet.address)
-    const prepare = await callSwapApi('prepare', payload)
+    const prepared = await callSwapPrepareWithConsentRecovery(args, payload, wallet.address)
+    const prepare = prepared.prepare
     const plan = buildExecutionPlan(prepare, approvalMode)
     const { intent, intentHash } = buildSwapIntent({
       walletAddress: wallet.address,
@@ -63,7 +64,8 @@ const {
         plan,
         intent,
         intentHash,
-        wallet
+        wallet,
+        disclaimer: prepared.disclaimer
       }),
       warnings: plan.backendWarnings
     })
@@ -71,4 +73,3 @@ const {
     printFailure('swap_build', adapter, params, error)
   }
 })()
-

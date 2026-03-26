@@ -7,6 +7,12 @@ const {
 } = require('./wallet-common.js')
 
 const {
+  fetchDisclaimerStatus,
+  normalizeVersion,
+  registerDisclaimerConsent
+} = require('./disclaimer-common.js')
+
+const {
   computeIntentHash,
   executeTxSteps,
   parseArgs,
@@ -68,6 +74,20 @@ function printFailure (module, adapter, params, error, warnings = []) {
   process.exit(1)
 }
 
+function isDisclaimerBlockedError (error) {
+  if (!error || typeof error !== 'object') return false
+  if (String(error.errorCode || '').trim() === 'disclaimer_not_accepted') return true
+  if (Number(error.statusCode) === 412) return true
+  const responseBody = error.responseBody && typeof error.responseBody === 'object'
+    ? error.responseBody
+    : null
+  if (responseBody && String(responseBody.error || '').trim() === 'disclaimer_not_accepted') {
+    return true
+  }
+  const message = String(error.message || '').toLowerCase()
+  return message.includes('disclaimer acceptance is required')
+}
+
 async function callCrosschainApi (method, path, payload = null) {
   const baseUrl = normalizeApiBaseUrl()
   const response = await fetch(`${baseUrl}${path}`, {
@@ -93,10 +113,72 @@ async function callCrosschainApi (method, path, payload = null) {
     const detail = body && (body.message || body.error)
       ? String(body.message || body.error)
       : `HTTP ${response.status}`
-    throw new Error(`crosschain_api_failed: ${detail}`)
+    const error = new Error(`crosschain_api_failed: ${detail}`)
+    error.statusCode = response.status
+    error.responseBody = body
+    error.errorCode = body && body.error ? String(body.error) : null
+    throw error
   }
 
   return body
+}
+
+async function callCrosschainBuildWithConsentRecovery (args, payload, walletAddress) {
+  try {
+    return {
+      build: await callCrosschainApi('POST', '/api/v1/crosschain/build', payload),
+      disclaimer: null
+    }
+  } catch (error) {
+    if (!isDisclaimerBlockedError(error)) {
+      throw error
+    }
+
+    const blockedVersion = error && error.responseBody && error.responseBody.policyVersion
+      ? String(error.responseBody.policyVersion)
+      : null
+    const version = normalizeVersion(args['disclaimer-version'], blockedVersion)
+    const statusBefore = await fetchDisclaimerStatus({
+      wallet: walletAddress,
+      version
+    })
+    const autoAccept = parseBooleanFlag(args['accept-disclaimer'], 'accept-disclaimer', false)
+
+    if (!autoAccept) {
+      throw new Error(
+        `crosschain_build_failed: Disclaimer acceptance is required for wallet ${walletAddress} (version=${version}, accepted=${statusBefore.accepted}). ` +
+        `Run wallet-disclaimer-status and wallet-register-consent first, or retry with --accept-disclaimer true --confirm-consent true.`
+      )
+    }
+
+    const confirmConsent = parseBooleanFlag(args['confirm-consent'], 'confirm-consent', false)
+    if (!confirmConsent) {
+      throw new Error('crosschain_build_failed: --accept-disclaimer true requires --confirm-consent true.')
+    }
+
+    const consent = await registerDisclaimerConsent({
+      wallet: walletAddress,
+      version
+    })
+
+    if (!consent.accepted) {
+      throw new Error(`crosschain_build_failed: disclaimer consent was not confirmed for wallet ${walletAddress} (version=${version}).`)
+    }
+
+    return {
+      build: await callCrosschainApi('POST', '/api/v1/crosschain/build', payload),
+      disclaimer: {
+        recovered: true,
+        wallet: walletAddress,
+        version,
+        accepted: consent.accepted,
+        acceptedAt: consent.acceptedAt,
+        statusBefore: {
+          accepted: statusBefore.accepted
+        }
+      }
+    }
+  }
 }
 
 function extractTxHash (txPayload) {
@@ -119,6 +201,7 @@ function extractTxHash (txPayload) {
 
 module.exports = {
   callCrosschainApi,
+  callCrosschainBuildWithConsentRecovery,
   computeIntentHash,
   executeTxSteps,
   extractTxHash,

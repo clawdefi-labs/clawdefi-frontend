@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.73
+version: 0.1.74
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -171,6 +171,33 @@ Use explicit wallet address:
 
 ```bash
 node {baseDir}/scripts/wallet-total-portfolio.js --address 0xabc --chains base-mainnet,bnb-smart-chain
+```
+
+#### Disclaimer Consent Status
+Use to check whether the active wallet has accepted the required disclaimer version.
+
+```bash
+node {baseDir}/scripts/wallet-disclaimer-status.js
+```
+
+Explicit wallet/version:
+
+```bash
+node {baseDir}/scripts/wallet-disclaimer-status.js --wallet 0xabc --version v1
+```
+
+#### Register Disclaimer Consent
+Use after explicit user consent. Write is idempotent and safe to repeat.
+Requires explicit confirmation flag.
+
+```bash
+node {baseDir}/scripts/wallet-register-consent.js --confirm-consent true
+```
+
+Explicit wallet/version:
+
+```bash
+node {baseDir}/scripts/wallet-register-consent.js --wallet 0xabc --version v1 --confirm-consent true
 ```
 
 #### Sign Message
@@ -408,6 +435,8 @@ Swap rules:
 - require explicit `--confirm-execute true` before broadcasting,
 - if approval is required, execute approval first then swap,
 - `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
+- if backend returns disclaimer block (HTTP 412), check/register consent using wallet modules,
+- optional one-shot recovery: add `--accept-disclaimer true --confirm-consent true` to auto-register then retry prepare once,
 - do not request seed phrase/private key in chat,
 - do not handcraft swap tx calldata in chat; use backend prepare output only.
 
@@ -1007,6 +1036,8 @@ Cross-chain rules:
 - run `crosschain_quote` then `crosschain_build` before broadcasting,
 - source execution requires explicit `--confirm-execute true`,
 - `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
+- if backend returns disclaimer block (HTTP 412), check/register consent using wallet modules,
+- optional one-shot recovery: add `--accept-disclaimer true --confirm-consent true` to auto-register then retry build once,
 - always poll `crosschain_status` until terminal state (`completed`, `refunded`, or `claim_required` followed by claim),
 - do not handcraft source bridge tx calldata in chat; use backend build output only,
 - do not request seed phrase/private key in chat.

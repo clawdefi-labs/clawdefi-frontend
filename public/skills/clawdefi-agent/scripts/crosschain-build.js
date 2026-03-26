@@ -2,7 +2,7 @@
 'use strict'
 
 const {
-  callCrosschainApi,
+  callCrosschainBuildWithConsentRecovery,
   normalizeAdapter,
   parseArgs,
   printFailure,
@@ -51,7 +51,8 @@ const {
 
     const approvalMode = parseApprovalMode(args)
     const payload = buildCrosschainPayload(crosschain, wallet.address, adapter)
-    const build = await callCrosschainApi('POST', '/api/v1/crosschain/build', payload)
+    const prepared = await callCrosschainBuildWithConsentRecovery(args, payload, wallet.address)
+    const build = prepared.build
     const plan = buildExecutionPlan(build, approvalMode)
     const { intent, intentHash } = buildCrosschainIntent({
       walletAddress: wallet.address,
@@ -74,7 +75,8 @@ const {
         plan,
         intent,
         intentHash,
-        wallet
+        wallet,
+        disclaimer: prepared.disclaimer
       }),
       warnings: plan.backendWarnings
     })

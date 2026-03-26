@@ -17,6 +17,12 @@ const {
   withAccount
 } = require('./wallet-common.js')
 
+const {
+  fetchDisclaimerStatus,
+  normalizeVersion,
+  registerDisclaimerConsent
+} = require('./disclaimer-common.js')
+
 function normalizeAdapter (value) {
   const adapter = String(value || process.env.CLAWDEFI_SWAP_ADAPTER || '0x').trim().toLowerCase()
   if (!adapter) {
@@ -154,6 +160,20 @@ function parseBooleanFlag (value, fieldName, fallback = false) {
   throw new Error(`--${fieldName} must be true/false.`)
 }
 
+function isDisclaimerBlockedError (error) {
+  if (!error || typeof error !== 'object') return false
+  if (String(error.errorCode || '').trim() === 'disclaimer_not_accepted') return true
+  if (Number(error.statusCode) === 412) return true
+  const responseBody = error.responseBody && typeof error.responseBody === 'object'
+    ? error.responseBody
+    : null
+  if (responseBody && String(responseBody.error || '').trim() === 'disclaimer_not_accepted') {
+    return true
+  }
+  const message = String(error.message || '').toLowerCase()
+  return message.includes('disclaimer acceptance is required')
+}
+
 function parseChainPayload (value, fallback = 'base-mainnet') {
   const raw = String(value || fallback).trim()
   const selector = parseChainSelector(raw)
@@ -227,10 +247,72 @@ async function callSwapApi (mode, payload) {
     const detail = body && (body.message || body.error)
       ? String(body.message || body.error)
       : `HTTP ${response.status}`
-    throw new Error(`swap_${normalizedMode}_failed: ${detail}`)
+    const error = new Error(`swap_${normalizedMode}_failed: ${detail}`)
+    error.statusCode = response.status
+    error.responseBody = body
+    error.errorCode = body && body.error ? String(body.error) : null
+    throw error
   }
 
   return body
+}
+
+async function callSwapPrepareWithConsentRecovery (args, payload, walletAddress) {
+  try {
+    return {
+      prepare: await callSwapApi('prepare', payload),
+      disclaimer: null
+    }
+  } catch (error) {
+    if (!isDisclaimerBlockedError(error)) {
+      throw error
+    }
+
+    const blockedVersion = error && error.responseBody && error.responseBody.policyVersion
+      ? String(error.responseBody.policyVersion)
+      : null
+    const version = normalizeVersion(args['disclaimer-version'], blockedVersion)
+    const statusBefore = await fetchDisclaimerStatus({
+      wallet: walletAddress,
+      version
+    })
+    const autoAccept = parseBooleanFlag(args['accept-disclaimer'], 'accept-disclaimer', false)
+
+    if (!autoAccept) {
+      throw new Error(
+        `swap_prepare_failed: Disclaimer acceptance is required for wallet ${walletAddress} (version=${version}, accepted=${statusBefore.accepted}). ` +
+        `Run wallet-disclaimer-status and wallet-register-consent first, or retry with --accept-disclaimer true --confirm-consent true.`
+      )
+    }
+
+    const confirmConsent = parseBooleanFlag(args['confirm-consent'], 'confirm-consent', false)
+    if (!confirmConsent) {
+      throw new Error('swap_prepare_failed: --accept-disclaimer true requires --confirm-consent true.')
+    }
+
+    const consent = await registerDisclaimerConsent({
+      wallet: walletAddress,
+      version
+    })
+
+    if (!consent.accepted) {
+      throw new Error(`swap_prepare_failed: disclaimer consent was not confirmed for wallet ${walletAddress} (version=${version}).`)
+    }
+
+    return {
+      prepare: await callSwapApi('prepare', payload),
+      disclaimer: {
+        recovered: true,
+        wallet: walletAddress,
+        version,
+        accepted: consent.accepted,
+        acceptedAt: consent.acceptedAt,
+        statusBefore: {
+          accepted: statusBefore.accepted
+        }
+      }
+    }
+  }
 }
 
 async function simulateTxSteps (args, steps, context = {}) {
@@ -279,6 +361,7 @@ async function executeTxSteps (args, steps, context = {}) {
 
 module.exports = {
   callSwapApi,
+  callSwapPrepareWithConsentRecovery,
   computeIntentHash,
   executeTxSteps,
   normalizeAdapter,

@@ -1,8 +1,8 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.73",
+  "version": "0.1.74",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "288578de0a1a25ab9339f16dca8ff7060ad5cf0a11a9d21dfdf770e5174e11b1",
+  "sha256": "5ca52aab3dff1e7e8228e7f1a81a130db8185437b4746fc4849d637d04b0c0be",
   "files": [
     {
       "path": "scripts/crosschain-action-helpers.js",
@@ -12,7 +12,7 @@
     {
       "path": "scripts/crosschain-build.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-build.js",
-      "sha256": "0422a580fa09f851327dec4a3faafdaa3193b6b1b94e4f522a9a431e815f8310"
+      "sha256": "4db4fc710378f098d51c3be38fbb36f5fda8c5472793edbdbe42cf483ac43adf"
     },
     {
       "path": "scripts/crosschain-claim.js",
@@ -22,12 +22,12 @@
     {
       "path": "scripts/crosschain-common.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-common.js",
-      "sha256": "2259586b0a84e0b836820809b470839d17e2dc287c81bbe2d2bf822bd7db7962"
+      "sha256": "722aba27c6b47c59d492205dd949f5e11e2907b68fca9d35c1db20c850a0a162"
     },
     {
       "path": "scripts/crosschain-execute-source.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-execute-source.js",
-      "sha256": "137fc393169859e7716923d2b6e0631e772701812d9c1f02240568cd7921882a"
+      "sha256": "58793f38f34fa20a851f441b96bdbc02ae8e4e620a0ea3be2227a948659f5bff"
     },
     {
       "path": "scripts/crosschain-quote.js",
@@ -48,6 +48,11 @@
       "path": "scripts/crypto-market-rank.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crypto-market-rank.js",
       "sha256": "2d2f9baba99fc45ef8e7f9678732f52d8b47d76fb81ac849b04d8facb0750746"
+    },
+    {
+      "path": "scripts/disclaimer-common.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/disclaimer-common.js",
+      "sha256": "61b9de4619081b413c29e9aa772162657a6b3545d94aa363e5b4923b5df5695d"
     },
     {
       "path": "scripts/install-raw.sh",
@@ -407,17 +412,17 @@
     {
       "path": "scripts/swap-build.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/swap-build.js",
-      "sha256": "79c361eae6358f6f3258d6341b344a9644bd5a099a4f77ef6fd07d1c4ec41027"
+      "sha256": "834a8c2a61b296cab23bec03f0b1ef948b85741cd5bc9ff972190864e9cb8be9"
     },
     {
       "path": "scripts/swap-common.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/swap-common.js",
-      "sha256": "fe92a5038afcf3f13001df4a5ebab72e8e0a0c228b798f9aeef055ba145db7a7"
+      "sha256": "d131aa8c912bbbf72276439ee2f076c2935e6321ff93c757a0af8f50851455d4"
     },
     {
       "path": "scripts/swap-execute.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/swap-execute.js",
-      "sha256": "38e4e835cd3b5f5b18f21f7498f657d00a4c142f348b5e4b379f70f631bc64e4"
+      "sha256": "2f63dc7dae7dcb8c5aa11413b4a073b2b14fae09b01e9bd7d76ea08df9fb53c1"
     },
     {
       "path": "scripts/swap-quote.js",
@@ -427,7 +432,7 @@
     {
       "path": "scripts/swap-simulate.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/swap-simulate.js",
-      "sha256": "ac9cccfca90e655ce832f187264ead65b29a33629be474a702cd2160f2a017c8"
+      "sha256": "b4f493b94f87d18295bec22b6a28de79a87b9b21c78f95f1b0a979958fba5748"
     },
     {
       "path": "scripts/trading-signal.js",
@@ -460,6 +465,11 @@
       "sha256": "aea9f60f8e0d0b2c8a47340551318807ea89ee39f56945696f3ad4204d0a24ea"
     },
     {
+      "path": "scripts/wallet-disclaimer-status.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-disclaimer-status.js",
+      "sha256": "061079c6608bc4bd198b8a79f0bcb735dde1e077d5e82f169b4c52bf1c44d281"
+    },
+    {
       "path": "scripts/wallet-discover.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-discover.js",
       "sha256": "2f3b66cf22a7a7cf81e66e78f0905b221bbbc665ef00202b46c5b8d3a645da9a"
@@ -468,6 +478,11 @@
       "path": "scripts/wallet-import.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-import.js",
       "sha256": "8555a8126337d21cf788d4255db99038bb8b858fbf249f5f6dca72c06a1c7426"
+    },
+    {
+      "path": "scripts/wallet-register-consent.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/wallet-register-consent.js",
+      "sha256": "5fdf84791f096150ee707e6a86715c366b23acaa3d33e42438447bdb2ca46ad0"
     },
     {
       "path": "scripts/wallet-select.js",
