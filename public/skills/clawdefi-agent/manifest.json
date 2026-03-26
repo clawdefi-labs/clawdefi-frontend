@@ -1,9 +1,49 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.71",
+  "version": "0.1.72",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "dbf4f51964c1124a55c4792fa0f9f655bcf512012f432826b5bde560fa329ca0",
+  "sha256": "62042874a077f3ce17598e3fe46dbc964ddfd793d1c4817c4a1aa768cac06e05",
   "files": [
+    {
+      "path": "scripts/crosschain-action-helpers.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-action-helpers.js",
+      "sha256": "27b9a9c32c6fa33bb92c598b27a42f2e4b20055af4ebf78fa38ac04e63f992f4"
+    },
+    {
+      "path": "scripts/crosschain-build.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-build.js",
+      "sha256": "0422a580fa09f851327dec4a3faafdaa3193b6b1b94e4f522a9a431e815f8310"
+    },
+    {
+      "path": "scripts/crosschain-claim.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-claim.js",
+      "sha256": "02a8ed15571dc3b5b7e5500d8dadd05e21d24cff1fd1cc2e08f1ee5d5a54a622"
+    },
+    {
+      "path": "scripts/crosschain-common.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-common.js",
+      "sha256": "2259586b0a84e0b836820809b470839d17e2dc287c81bbe2d2bf822bd7db7962"
+    },
+    {
+      "path": "scripts/crosschain-execute-source.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-execute-source.js",
+      "sha256": "137fc393169859e7716923d2b6e0631e772701812d9c1f02240568cd7921882a"
+    },
+    {
+      "path": "scripts/crosschain-quote.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-quote.js",
+      "sha256": "fb299b1e7c8fb425686e531187d2aed8ae6d7396830209879463f2201b725e4e"
+    },
+    {
+      "path": "scripts/crosschain-refund.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-refund.js",
+      "sha256": "cdb5a86da88c670728841edac0cb35f5d8cef500eddbdc4154be119c71c5af24"
+    },
+    {
+      "path": "scripts/crosschain-status.js",
+      "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crosschain-status.js",
+      "sha256": "54768c00daeca589b9f2d6d1d0f14b1e0662d14b40dd936a0f4d5ce18e27be14"
+    },
     {
       "path": "scripts/crypto-market-rank.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/crypto-market-rank.js",

@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.71
+version: 0.1.72
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -930,4 +930,83 @@ Options rules:
 - execution requires explicit `--confirm-execute true`,
 - `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
 - use adapter-built tx requests only; do not handcraft calldata in chat,
+- do not request seed phrase/private key in chat.
+
+### IX. Cross-Chain Swap
+
+Cross-chain swap is now a dedicated category with lifecycle-aware modules.
+
+Execution model:
+- backend provides route quote/build/status lifecycle through `crosschain_plan.v1`,
+- local WDK runtime signs and broadcasts source-chain tx steps,
+- agent polls status until settled (or refund-required),
+- claim/refund modules exist for routes that require them.
+
+Current adapter support:
+- `0x` (sim lifecycle adapter path; modular contract kept for future real bridge adapters).
+
+#### crosschain_quote
+Quote a cross-chain route and lifecycle estimate.
+
+```bash
+node {baseDir}/scripts/crosschain-quote.js --adapter 0x --source-chain base-mainnet --destination-chain ethereum-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 --sell-amount 1000000000000000 --slippage-bps 100
+```
+
+#### crosschain_build
+Build deterministic source execution plan (approval + source bridge tx) and request id.
+
+```bash
+node {baseDir}/scripts/crosschain-build.js --adapter 0x --source-chain base-mainnet --destination-chain ethereum-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 --sell-amount 1000000000000000 --approval-mode exact
+```
+
+#### crosschain_execute_source
+Execute source tx steps locally, then register source tx hash to start lifecycle tracking.
+
+```bash
+node {baseDir}/scripts/crosschain-execute-source.js --adapter 0x --source-chain base-mainnet --destination-chain ethereum-mainnet --sell-token 0x4200000000000000000000000000000000000006 --buy-token 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 --sell-amount 1000000000000000 --approval-mode exact --confirm-execute true
+```
+
+#### crosschain_status
+Poll lifecycle status using request id.
+
+```bash
+node {baseDir}/scripts/crosschain-status.js --adapter 0x --request-id <request_id>
+```
+
+#### crosschain_claim
+Execute claim path when route status is `claim_required`.
+
+Dry-run:
+
+```bash
+node {baseDir}/scripts/crosschain-claim.js --adapter 0x --request-id <request_id> --dry-run true
+```
+
+Execute:
+
+```bash
+node {baseDir}/scripts/crosschain-claim.js --adapter 0x --request-id <request_id> --confirm-execute true
+```
+
+#### crosschain_refund
+Execute refund path when route status is `refund_required`.
+
+Dry-run:
+
+```bash
+node {baseDir}/scripts/crosschain-refund.js --adapter 0x --request-id <request_id> --dry-run true
+```
+
+Execute:
+
+```bash
+node {baseDir}/scripts/crosschain-refund.js --adapter 0x --request-id <request_id> --confirm-execute true
+```
+
+Cross-chain rules:
+- run `crosschain_quote` then `crosschain_build` before broadcasting,
+- source execution requires explicit `--confirm-execute true`,
+- `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
+- always poll `crosschain_status` until terminal state (`completed`, `refunded`, or `claim_required` followed by claim),
+- do not handcraft source bridge tx calldata in chat; use backend build output only,
 - do not request seed phrase/private key in chat.
