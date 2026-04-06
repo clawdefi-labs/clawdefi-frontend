@@ -133,7 +133,8 @@ function parseTradeArgs (args, { requireOrderParams = true } = {}) {
   const side = args.side ? parseSide(args.side) : null
   const orderKind = parseOrderKind(args['order-kind'] || args.orderKind || (args.amount ? ORDER_KIND.MARKET : ORDER_KIND.LIMIT))
   const orderType = parseOrderType(args['order-type'] || args.orderType, orderKind)
-  const chain = normalizeChainForPredictions(args.chain || 'polygon-pos')
+  const adapterDefault = args.adapter === 'foresight' ? 'base-mainnet' : 'polygon-pos'
+  const chain = normalizeChainForPredictions(args.chain || adapterDefault)
 
   const price = parseOptionalNumber(args.price, 'price', { minExclusive: 0 })
   const size = parseOptionalNumber(args.size, 'size', { minExclusive: 0 })

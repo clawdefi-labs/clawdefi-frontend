@@ -15,11 +15,12 @@ const {
 } = require('./wallet-common.js')
 
 const ADAPTERS = {
+  foresight: () => require('./predictions-adapter-foresight.js'),
   polymarket: () => require('./predictions-adapter-polymarket.js')
 }
 
 function normalizeAdapter (value) {
-  const adapter = String(value || process.env.CLAWDEFI_PREDICTIONS_ADAPTER || 'polymarket').trim().toLowerCase()
+  const adapter = String(value || process.env.CLAWDEFI_PREDICTIONS_ADAPTER || 'foresight').trim().toLowerCase()
   if (!adapter) {
     throw new Error('Missing predictions adapter.')
   }
@@ -44,6 +45,8 @@ function normalizeChainForPredictions (value) {
   if (raw === 'amoy' || raw === 'polygon-amoy') return 'polygon-amoy'
   if (raw === '137') return 'polygon-pos'
   if (raw === '80002') return 'polygon-amoy'
+  if (raw === 'base' || raw === 'base-mainnet') return 'base-mainnet'
+  if (raw === '8453') return 'base-mainnet'
   return raw
 }
 
@@ -186,10 +189,15 @@ function toWdkTxRequest (input) {
   return normalized
 }
 
+const ADAPTER_DEFAULT_CHAIN = {
+  polymarket: 'polygon-pos',
+  foresight: 'base-mainnet'
+}
+
 async function withWalletContext (args, intent, callback) {
   const seed = await requireSeed()
   const selection = await readSelection()
-  const defaultChain = 'polygon-pos'
+  const defaultChain = ADAPTER_DEFAULT_CHAIN[args.adapter] || 'polygon-pos'
   const chain = normalizeChainForPredictions(args.chain || defaultChain)
 
   if (chainToFamily(chain) !== 'evm') {

@@ -692,10 +692,21 @@ Lending rules:
 
 Predictions execution is local-first and adapter-based.
 
-Current adapter:
-- `polymarket`
+Current adapters:
+- `foresight` (Base, AMM on-chain) — **default**
+- `polymarket` (Polygon, CLOB order-book)
 
-Architecture split:
+#### Foresight architecture
+
+- AMM-style prediction market on Base mainnet (chain ID 8453).
+- API at `https://api.foresight.now` returns transaction calldata; execution is fully on-chain.
+- No API keys needed; no off-chain order signing.
+- Settlement in USDC on Base (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`).
+- Limit orders are not supported; the adapter converts limit intents to market orders with a warning.
+- `tradeTokenId` is a synthetic `{marketId}-yes` or `{marketId}-no` identifier.
+
+#### Polymarket architecture
+
 - `Gamma` is discovery/metadata (market catalog, outcomes, status, slugs, condition IDs, CLOB token IDs),
 - `CLOB` is trading (orderbook, quotes, signed order submission, open orders, fills).
 
@@ -710,7 +721,63 @@ Local signing and authority boundary:
 - CLOB API authentication is derived locally (API key/secret/passphrase),
 - no backend custody/signing path is used for predictions execution.
 
-#### predictions_markets
+#### Foresight examples (default adapter)
+
+##### predictions_markets
+
+List markets:
+
+```bash
+node {baseDir}/scripts/predictions-markets.js --mode list --limit 25
+```
+
+Search markets:
+
+```bash
+node {baseDir}/scripts/predictions-markets.js --mode search --query bitcoin --limit 25
+```
+
+Get a specific market:
+
+```bash
+node {baseDir}/scripts/predictions-markets.js --mode get --market-id <id> --outcome yes
+```
+
+##### predictions_quote
+
+```bash
+node {baseDir}/scripts/predictions-quote.js --market-id <id> --outcome yes --side buy --amount 50
+```
+
+##### predictions_build
+
+Build on-chain trade calldata with USDC approval plan.
+
+```bash
+node {baseDir}/scripts/predictions-build.js --market-id <id> --outcome yes --side buy --amount 50
+```
+
+##### predictions_simulate
+
+Simulate approval tx steps via local WDK quote path.
+
+```bash
+node {baseDir}/scripts/predictions-simulate.js --market-id <id> --outcome yes --side buy --amount 50
+```
+
+##### predictions_execute
+
+Execute approval steps (if required), then send trade transaction on-chain.
+Requires explicit execute confirmation.
+
+```bash
+node {baseDir}/scripts/predictions-execute.js --market-id <id> --outcome yes --side buy --amount 50 --confirm-execute true
+```
+
+#### Polymarket examples
+
+##### predictions_markets
+
 Discover and resolve markets through Gamma (with CLOB cross-resolution when needed).
 
 List:
@@ -731,7 +798,8 @@ Get by slug:
 node {baseDir}/scripts/predictions-markets.js --adapter polymarket --mode get --slug will-bitcoin-hit-150k-in-2026
 ```
 
-#### predictions_quote
+##### predictions_quote
+
 Resolve market/outcome -> `tradeTokenId`, then fetch CLOB quote context (book/mid/spread/tick/negRisk).
 
 Limit quote context:
@@ -746,7 +814,8 @@ Market quote context:
 node {baseDir}/scripts/predictions-quote.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome no --side sell --order-kind market --amount 15 --order-type FOK
 ```
 
-#### predictions_build
+##### predictions_build
+
 Build deterministic signed order intent locally (EIP-712 signed order, not yet posted).
 Includes approval plan for collateral/operator setup.
 
@@ -754,7 +823,8 @@ Includes approval plan for collateral/operator setup.
 node {baseDir}/scripts/predictions-build.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome yes --side buy --order-kind limit --price 0.45 --size 20 --order-type GTC
 ```
 
-#### predictions_simulate
+##### predictions_simulate
+
 Simulate any required on-chain approval tx steps via local WDK quote path.
 Order submission itself is off-chain CLOB posting and is not on-chain simulated.
 
@@ -762,7 +832,8 @@ Order submission itself is off-chain CLOB posting and is not on-chain simulated.
 node {baseDir}/scripts/predictions-simulate.js --adapter polymarket --slug will-bitcoin-hit-150k-in-2026 --outcome yes --side buy --order-kind market --amount 25 --order-type FOK
 ```
 
-#### predictions_execute
+##### predictions_execute
+
 Execute approval steps locally (if required), then submit signed order to CLOB.
 Requires explicit execute confirmation.
 
@@ -771,9 +842,9 @@ node {baseDir}/scripts/predictions-execute.js --adapter polymarket --slug will-b
 ```
 
 Predictions rules:
-- Polygon EVM path only for now (`polygon-pos`, optional `polygon-amoy` support path),
+- Polymarket uses Polygon EVM path (`polygon-pos`, optional `polygon-amoy`); Foresight uses Base (`base-mainnet`),
 - always resolve outcome to a deterministic `tradeTokenId` before order actions,
-- if `--signature-type` is `poly-proxy` or `poly-gnosis-safe`, `--funder-address` is required,
+- if `--signature-type` is `poly-proxy` or `poly-gnosis-safe`, `--funder-address` is required (Polymarket only),
 - run `predictions_simulate` before `predictions_execute` for fund-impacting actions,
 - `--approval-mode unlimited` requires explicit `--allow-unlimited true`,
 - execution requires explicit `--confirm-execute true`,
