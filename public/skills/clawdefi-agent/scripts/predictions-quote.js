@@ -14,6 +14,7 @@ const {
 ;(async () => {
   const args = parseArgs(process.argv.slice(2))
   const { adapter, impl } = loadAdapter(args.adapter)
+  args.adapter = adapter
 
   const input = parseTradeArgs(args, { requireOrderParams: false })
   const params = {

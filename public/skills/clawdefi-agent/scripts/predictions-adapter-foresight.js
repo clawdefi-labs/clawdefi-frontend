@@ -152,10 +152,13 @@ function resolveOutcomeSelection ({ market, outcome, tokenId }) {
     if (!normalizedTokenId) throw new Error('Invalid --token-id.')
 
     const matched = (market.outcomes || []).find((entry) => String(entry.tradeTokenId) === normalizedTokenId)
+    if (!matched) {
+      throw new Error(`Token ID "${normalizedTokenId}" does not belong to market ${market.marketId}. Valid: ${(market.outcomes || []).map(o => o.tradeTokenId).join(', ')}`)
+    }
     return {
       tokenId: normalizedTokenId,
-      outcomeLabel: matched ? matched.label : null,
-      outcomeIndex: matched ? matched.index : null
+      outcomeLabel: matched.label,
+      outcomeIndex: matched.index
     }
   }
 
@@ -188,7 +191,7 @@ async function fetchForesightMarkets () {
   return items
 }
 
-async function resolveMarketSelection ({ marketId, tokenId, outcome }) {
+async function resolveMarketSelection ({ marketId, slug, conditionId, tokenId, outcome }) {
   const markets = await fetchForesightMarkets()
 
   let resolvedMarketId = marketId
@@ -198,6 +201,9 @@ async function resolveMarketSelection ({ marketId, tokenId, outcome }) {
   }
 
   if (!resolvedMarketId) {
+    if (slug || conditionId) {
+      throw new Error('Foresight does not support --slug or --condition-id. Use --market-id or --token-id.')
+    }
     throw new Error('Provide --market-id or --token-id to identify a Foresight market.')
   }
 
@@ -254,6 +260,8 @@ async function discoverMarkets (input) {
   if (mode === 'get') {
     const resolved = await resolveMarketSelection({
       marketId: input.marketId,
+      slug: input.slug,
+      conditionId: input.conditionId,
       tokenId: input.tokenId,
       outcome: input.outcome
     })
@@ -310,6 +318,8 @@ async function quoteTrade (input) {
 
   const resolved = await resolveMarketSelection({
     marketId: input.marketId,
+    slug: input.slug,
+    conditionId: input.conditionId,
     tokenId: input.tokenId,
     outcome: input.outcome
   })

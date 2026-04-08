@@ -18,6 +18,7 @@ const {
 ;(async () => {
   const args = parseArgs(process.argv.slice(2))
   const { adapter, impl } = loadAdapter(args.adapter)
+  args.adapter = adapter
 
   const input = parseTradeArgs(args, { requireOrderParams: true })
   const params = {
@@ -50,6 +51,25 @@ const {
         })
       }
 
+      let submission
+      if (build.txRequest) {
+        const tradeTx = toWdkTxRequest(build.txRequest)
+        const tradeQuote = await account.quoteSendTransaction(tradeTx)
+        submission = {
+          offchain: false,
+          action: 'send_transaction',
+          note: 'Trade transaction simulated via wallet quote path.',
+          txRequest: stringifyBigInts(tradeTx),
+          simulation: stringifyBigInts(tradeQuote)
+        }
+      } else {
+        submission = {
+          offchain: true,
+          action: 'post_order',
+          note: 'CLOB order submission is off-chain and not simulated via wallet quote path.'
+        }
+      }
+
       return {
         wallet: {
           address,
@@ -59,11 +79,7 @@ const {
         simulation: {
           mode: 'simulate',
           approvalSteps: approvalSimulations,
-          submission: {
-            offchain: true,
-            action: 'post_order',
-            note: 'CLOB order submission is off-chain and not simulated via wallet quote path.'
-          }
+          submission
         }
       }
     })
