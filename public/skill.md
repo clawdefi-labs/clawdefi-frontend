@@ -1,6 +1,6 @@
 ---
 name: clawdefi-agent
-version: 0.1.76
+version: 0.1.78
 description: The source of DeFi intelligence for AI agents. Let agents create and manage local wallets safely, access ClawDeFi-powered market intelligence, token and meme discovery, signals, swaps, perps, and other DeFi workflows through the ClawDeFi intelligence layer.
 homepage: https://www.clawdefi.ai
 metadata: {"clawdefi":{"category":"defi-intelligence","api_base":"https://api.clawdefi.ai","distribution":["clawhub","raw"]}}
@@ -89,7 +89,29 @@ Default posture:
 - do not auto-upgrade WDK dependency versions,
 - pin installed versions via local lockfile unless user explicitly opts into upgrade.
 
-## E. Skill Action Model
+## E. Action Routing
+
+When the user asks about a DeFi action, **always use the skill scripts first**. Do not web-search for external information when a local script can answer.
+
+| User intent | Action | Script |
+|---|---|---|
+| prediction markets, betting, Foresight, Polymarket | Run `predictions_markets` to list/search markets | `predictions-markets.js` |
+| swap tokens | Run `swap_quote` then `swap_build` | `swap-*.js` |
+| perps, leverage, long/short | Run `perps_fetch_market_state` | `perps-*.js` |
+| lending, borrow, supply | Run lending scripts | `lending-*.js` |
+| yield, staking, Pendle | Run yield scripts | `yield-*.js` |
+| options, Thetanuts | Run options scripts | `options-*.js` |
+| cross-chain, bridge | Run crosschain scripts | `crosschain-*.js` |
+| wallet, balance, portfolio | Run wallet scripts | `wallet-*.js` |
+| market data, token info | Run market intel scripts | `crypto-market-*.js` |
+
+Rules:
+- **Never web-search for market data, prices, or available markets when a skill script exists for it.** The scripts call live APIs and return real-time data.
+- If a script fails, report the error to the user. Do not fall back to web search as a substitute.
+- Foresight is the **default** prediction market adapter. When the user mentions "predictions", "betting", or "Foresight", run the predictions scripts directly — no `--adapter` flag needed.
+- Polymarket requires explicit `--adapter polymarket`.
+
+## F. Skill Action Model
 
 ### I. Wallet Management
 
@@ -690,7 +712,9 @@ Lending rules:
 
 ### VI. Predictions
 
-Predictions execution is local-first and adapter-based.
+Predictions execution is local-first and adapter-based. **When the user asks about prediction markets, betting, or Foresight — run the scripts below. Do not web-search.**
+
+The default adapter is Foresight. No `--adapter` flag is needed. Just run the scripts.
 
 Current adapters:
 - `foresight` (Base, AMM on-chain) — **default**
@@ -720,6 +744,15 @@ Local signing and authority boundary:
 - order signing stays local through WDK wallet,
 - CLOB API authentication is derived locally (API key/secret/passphrase),
 - no backend custody/signing path is used for predictions execution.
+
+#### Foresight workflow
+
+When user wants to bet on Foresight:
+1. **List markets** → `predictions-markets.js --mode list` — show available markets
+2. **User picks a market** → note the `marketId`
+3. **Quote** → `predictions-quote.js --market-id <id> --outcome yes --side buy --amount <usdc>` — show price/shares
+4. **Simulate** → `predictions-simulate.js` — verify approval + trade tx
+5. **Execute** → `predictions-execute.js --confirm-execute true` — send on-chain
 
 #### Foresight examples (default adapter)
 
