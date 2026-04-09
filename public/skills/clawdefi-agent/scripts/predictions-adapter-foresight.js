@@ -106,10 +106,18 @@ function normalizeOutcomeLabel (value) {
   return String(value || '').trim().toLowerCase()
 }
 
+function toUsdcBaseUnitsString (amountUi) {
+  const numeric = Number(amountUi)
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    throw new Error('Amount must be a positive number.')
+  }
+  return String(BigInt(Math.round(numeric * 1_000_000)))
+}
+
 function normalizeForesightMarket (raw) {
-  const marketId = String(raw.id || raw.marketId || raw.market_id || '')
-  const yesPrice = toFiniteNumber(raw.yesPrice ?? raw.yes_price ?? raw.outcomeYes)
-  const noPrice = toFiniteNumber(raw.noPrice ?? raw.no_price ?? raw.outcomeNo)
+  const marketId = String(raw.id || raw.marketId || raw.market_id || raw.address || '')
+  const yesPrice = toFiniteNumber(raw.yesPrice ?? raw.yes_price ?? raw.outcomeYes ?? raw.outcome1Price)
+  const noPrice = toFiniteNumber(raw.noPrice ?? raw.no_price ?? raw.outcomeNo ?? raw.outcome0Price)
 
   return {
     source: 'foresight',
@@ -207,7 +215,7 @@ async function resolveMarketSelection ({ marketId, slug, conditionId, tokenId, o
     throw new Error('Provide --market-id or --token-id to identify a Foresight market.')
   }
 
-  const match = markets.find((m) => String(m.id || m.marketId || m.market_id) === String(resolvedMarketId))
+  const match = markets.find((m) => String(m.id || m.marketId || m.market_id || m.address) === String(resolvedMarketId))
   if (!match) {
     throw new Error(`Foresight market not found: ${resolvedMarketId}`)
   }
@@ -334,11 +342,13 @@ async function quoteTrade (input) {
     throw new Error('Foresight quote requires --amount (USDC) or both --price and --size.')
   }
 
+  const amountBaseUnits = toUsdcBaseUnitsString(amount)
+
   const quoteResponse = await postJson(`${DEFAULT_API_URL}/trade/quote`, {
-    marketId: resolved.foresightMarketId,
+    market: resolved.foresightMarketId,
     outcome: resolved.outcomeApiValue,
-    amount: String(amount),
-    side: input.side
+    amount: amountBaseUnits,
+    type: input.side === 'buy' ? 'Buy' : 'Sell'
   })
 
   const estimatedShares = toFiniteNumber(quoteResponse.shares ?? quoteResponse.estimatedShares)
@@ -476,22 +486,24 @@ async function buildTrade (input) {
   const quote = await quoteTrade(input)
 
   const amount = input.amount || (input.price != null && input.size != null ? input.price * input.size : null)
+  const amountBaseUnits = toUsdcBaseUnitsString(amount)
 
   const tradeResponse = await postJson(`${DEFAULT_API_URL}/trade`, {
-    marketId: quote.market.marketId,
+    market: quote.market.marketId,
     outcome: quote.selection.outcomeIndex,
-    amount: String(amount),
-    side: input.side,
-    walletAddress: input.walletAddress
+    amount: amountBaseUnits,
+    type: input.side === 'buy' ? 'Buy' : 'Sell',
+    account: input.walletAddress
   })
 
+  const tradeTx = tradeResponse.tx || tradeResponse.transaction || tradeResponse
   const txRequest = {
-    to: tradeResponse.to,
-    data: tradeResponse.data,
-    value: tradeResponse.value || '0'
+    to: tradeTx.to,
+    data: tradeTx.data,
+    value: tradeTx.value || '0'
   }
 
-  const spenderAddress = tradeResponse.to
+  const spenderAddress = tradeTx.to
   const approvalPlan = await buildApprovalPlan({
     accountAddress: input.walletAddress,
     chain: chain.chainSlug,

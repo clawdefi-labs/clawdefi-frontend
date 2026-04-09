@@ -1,8 +1,8 @@
 {
   "name": "clawdefi-agent",
-  "version": "0.1.79",
+  "version": "0.1.80",
   "skill_url": "https://www.clawdefi.ai/skills/clawdefi-agent/SKILL.md",
-  "sha256": "9cf7e5dad68c2695f89ee773be492f8d51b8bc0238d4d05dba2fe8096cf95b66",
+  "sha256": "cb52903a288ef3ccc2874344b338b96dfc93cacd30eac16b818f6c01fa367df9",
   "files": [
     {
       "path": "scripts/crosschain-action-helpers.js",
@@ -312,7 +312,7 @@
     {
       "path": "scripts/predictions-adapter-foresight.js",
       "url": "https://www.clawdefi.ai/skills/clawdefi-agent/scripts/predictions-adapter-foresight.js",
-      "sha256": "05cf0b2d1a84c0a75f5f881ce96748ff8e95300262ac4745cada9b5162e2d784"
+      "sha256": "367837da4aa04a7020910b8e9fa9a66e55ef2f7ce8e958aa84048c314d342d01"
     },
     {
       "path": "scripts/predictions-adapter-polymarket.js",
